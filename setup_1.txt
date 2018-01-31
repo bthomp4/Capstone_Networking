@@ -48,9 +48,8 @@ sudo cp /etc/network/interfaces-wifi interfaces
 **Install a package to allow the Pi to assign a device connecting to it an IP
 address**
 
-Web Source 1. sudo apt-get install isc-dhcp-server
-Web Source 2. sudo apt-get update
-	      sudo apt-get install dhcp3-server 
+Web Source 1.   sudo apt-get update
+		sudo apt-get install isc-dhcp-server 
 
 **That created a config file that needs to be edited.**
 **Now access the file**
