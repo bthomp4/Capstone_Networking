@@ -17,3 +17,6 @@ The goal of this project is to connect two Raspberry Pi Zero Ws together using a
 5. Use the connected ad hoc network to send an image taken with the camera on one pi to the display connected to the second pi
 6. Use the connected ad hoc network to send sensor information from the ultrasonic sensors connected to one pi, to the display of the second pi
 7. Join this program with into one with the other programs
+
+## Additional Info
+### Setup an Ad Hoc Network
