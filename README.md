@@ -19,4 +19,10 @@ The goal of this project is to connect two Raspberry Pi Zero Ws together using a
 7. Join this program with into one with the other programs
 
 ## Additional Info
-### Setup an Ad Hoc Network
+### How to setup an Ad Hoc Network on Raspberry Pi
+1. From the command line, go to the following directory
+	```
+	cd /etc/network
+	```
+
+
