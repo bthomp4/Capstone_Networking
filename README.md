@@ -20,5 +20,7 @@ The goal of this project is to connect two Raspberry Pi Zero Ws together using a
 
 ## Project Links
 https://core-electronics.com.au/tutorials/raspberry-pi-zerow-headless-wifi-setup.html
+
 https://github.com/simondlevy/RPiAdHocWiFi
+
 https://lcdev.dk/2012/11/18/raspberry-pi-tutorial-connect-to-wifi-or-create-an-encrypted-dhcp-enabled-ad-hoc-network-as-fallback/
