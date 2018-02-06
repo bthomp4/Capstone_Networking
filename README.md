@@ -53,6 +53,7 @@ The goal of this project is to connect two Raspberry Pi Zero Ws together using a
       sudo systemctl restart dhcpcd
       ```
 4. Configuring the DHCP server (dnsmasq)
+   
    4.1 Rename the configuration file and edit a new one:
       ```
       sudo mv /etc/dnsmasq.conf /etc/dnsmasq.conf.orig
@@ -64,6 +65,7 @@ The goal of this project is to connect two Raspberry Pi Zero Ws together using a
       dhcp-range=192.168.4.2,192.168.4.20,255.255.255.0,24h
       ```
 5. Configuring the access point host software (hostapd)
+   
    5.1 Edit the hostapd config file to add parameters for wireless network
       ```
       sudo vim /etc/hostapd/hostapd.conf
