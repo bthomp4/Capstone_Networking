@@ -30,6 +30,7 @@ The goal of this project is to connect two Raspberry Pi Zero Ws together using a
    sudo systemctl stop hostapd
    ```
 3. Configuring a static IP:
+   
    3.1 Copy the current contents of the configuration file
       ```
       sudo cp /etc/dhcpcd.conf /etc/dhcpcd.conf.wifi
