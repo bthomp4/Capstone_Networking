@@ -94,6 +94,7 @@ The goal of this project is to connect two Raspberry Pi Zero Ws together using a
       DAEMON_CONF="/etc/hostapd/hostapd.conf"
       ```
 6. Start it up
+   
    6.1 Now start up the remaining services
       ```
       sudo systemctl start hostapd
@@ -101,11 +102,14 @@ The goal of this project is to connect two Raspberry Pi Zero Ws together using a
       ```
 7. Now Reboot and show be good to go!
 8. In order to change back and forth between wifi and ad-hoc network:
+   
    8.1 To change back to wifi:
       ```
       sudo cp /etc/dhcpcd.conf.wifi /etc/dhcpcd.conf
       ```
+   
    8.1.1 Then Reboot the Pi
+   
    8.2 To change back to ad-hoc:
       ```
       sudo cp /etc/dhcpcd.conf.adc /etc/dhcpcd.conf
