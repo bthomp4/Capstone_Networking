@@ -103,7 +103,7 @@ The goal of this project is to connect two Raspberry Pi Zero Ws together using a
       sudo systemctl start hostapd
       sudo systemctl start dnsmasq
       ```
-7. Now Reboot and show be good to go!
+7. Now Reboot and should be good to go!
 8. In order to change back and forth between wifi and ad-hoc network:
    
    8.1 To change back to wifi:
