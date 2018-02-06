@@ -4,7 +4,7 @@
 The goal of this project is to connect two Raspberry Pi Zero Ws together using an ad hoc network
 
 ## Project Tasks
-1.~ Create an ad hoc Network using one of the Raspberry Pi Zero Ws~
+~1. Create an ad hoc Network using one of the Raspberry Pi Zero Ws~
    - ~This may be done using the command line or programming / scripting language~
     - ~If done using the command line create a txt file that contains the commands used~
 2. Connect the second Raspberry Pi Zero W to the created ad hoc network
