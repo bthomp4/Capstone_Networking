@@ -49,7 +49,71 @@ The goal of this project is to connect two Raspberry Pi Zero Ws together using a
       sudo cp /etc/dhcpcd.conf.adc /etc/dhcpcd.conf
       ```
    3.5 Now restart the dhcpcd daemon and set up the new wlan0 configuration.
+      ```
+      sudo systemctl restart dhcpcd
+      ```
+4. Configuring the DHCP server (dnsmasq)
+   4.1 Rename the configuration file and edit a new one:
+      ```
+      sudo mv /etc/dnsmasq.conf /etc/dnsmasq.conf.orig
+      sudo vim /etc/dnsmasq.conf
+      ```
+   4.2 Add the following info into the dnsmasq configuration file and save:
+      ```
+      interface=wlan0
+      dhcp-range=192.168.4.2,192.168.4.20,255.255.255.0,24h
+      ```
+5. Configuring the access point host software (hostapd)
+   5.1 Edit the hostapd config file to add parameters for wireless network
+      ```
+      sudo vim /etc/hostapd/hostapd.conf
+      ```
+   5.2 Add the following information to the configuration file:
+      ```
+      interface=wlan0
+      driver=nl80211
+      ssid=RPiWireless
+      hw_mode=g
+      channel=7
+      wmm_enabled=1
+      macaddr_acl=0
+      auth_algs=1
+      ignore_broadcast_ssid=0
+      wpa=2
+      wpa_passphrase=raspberry
+      wpa_key_mgmt=WPA-PSK
+      wpa_pairwise=TKIP
+      rsn_pairwise=CCMP
+      ```
+   5.3 Now we need to tell the system where to find the config file from 5.2
+      ```
+      sudo vim /etc/default/hostapd
+      ```
+   5.4 Find the line with #DAEMON_CONF, and replace it with the following:
+      ```
+      DAEMON_CONF="/etc/hostapd/hostapd.conf"
+      ```
+6. Start it up
+   6.1 Now start up the remaining services
+      ```
+      sudo systemctl start hostapd
+      sudo systemctl start dnsmasq
+      ```
+7. Now Reboot and show be good to go!
+8. In order to change back and forth between wifi and ad-hoc network:
+   8.1 To change back to wifi:
+      ```
+      sudo cp /etc/dhcpcd.conf.wifi /etc/dhcpcd.conf
+      ```
+   8.1.1 Then Reboot the Pi
+   8.2 To change back to ad-hoc:
+      ```
+      sudo cp /etc/dhcpcd.conf.adc /etc/dhcpcd.conf
+      ```
 
+
+      
+      
 
 ## Project Links
 https://www.raspberrypi.org/documentation/configuration/wireless/access-point.md
