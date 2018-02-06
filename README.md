@@ -18,6 +18,10 @@ The goal of this project is to connect two Raspberry Pi Zero Ws together using a
 6. Use the connected ad hoc network to send sensor information from the ultrasonic sensors connected to one pi, to the display of the second pi
 7. Join this program with into one with the other programs
 
+## Additional Info
+### Setting up Ad Hoc Network for Raspberry Pi
+1. 
+
 ## Project Links
 https://core-electronics.com.au/tutorials/raspberry-pi-zerow-headless-wifi-setup.html
 
