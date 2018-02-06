@@ -110,10 +110,6 @@ The goal of this project is to connect two Raspberry Pi Zero Ws together using a
       ```
       sudo cp /etc/dhcpcd.conf.adc /etc/dhcpcd.conf
       ```
-
-
-      
-      
-
 ## Project Links
 https://www.raspberrypi.org/documentation/configuration/wireless/access-point.md
+https://frillip.com/using-your-raspberry-pi-3-as-a-wifi-access-point-with-hostapd/
