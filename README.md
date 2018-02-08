@@ -118,6 +118,17 @@ The goal of this project is to connect two Raspberry Pi Zero Ws together using a
       sudo cp /etc/dhcpcd.conf.adc /etc/dhcpcd.conf
       ```
 ## Project Links
+### For Access Point References
 https://www.raspberrypi.org/documentation/configuration/wireless/access-point.md
 
 https://frillip.com/using-your-raspberry-pi-3-as-a-wifi-access-point-with-hostapd/
+### For Socket Programming/ Image Transferring References
+
+http://effbot.org/imagingbook/image.htm
+
+### Special Note: Focus on using something that takes the image and puts it into a string
+
+https://raspberrypi.stackexchange.com/questions/67328/send-image-from-one-raspberry-pi-to-another-via-socket
+
+
+
