@@ -135,5 +135,8 @@ http://effbot.org/imagingbook/image.htm
 
 https://raspberrypi.stackexchange.com/questions/67328/send-image-from-one-raspberry-pi-to-another-via-socket
 
+### For encoding and decoding images in python
+
+https://code.tutsplus.com/tutorials/base64-encoding-and-decoding-using-python--cms-25588
 
 
