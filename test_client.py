@@ -3,9 +3,12 @@ import argparse
 #import signal
 import sys
 
-# for encoding the image #
+# for encoding the image 
 import base64
 from PIL import Image
+
+# for displaying the time
+from datetime import datetime
 
 def encodeImage():
     image = open('dog1.jpg','rb')
@@ -41,6 +44,10 @@ i = 0
 
 while(i < len(encode_msgs)):
     message = encode_msgs[i]
+
+    # for debugging, displaying time
+    print(datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3])
+    
     client_socket.sendto(message, (args.server_name,server_port))
     server_message,serverAddress = client_socket.recvfrom(2048)
     i = i + 1
