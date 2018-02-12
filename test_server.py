@@ -1,5 +1,5 @@
 
-m socket import *
+from socket import *
 
 import base64
 from PIL import Image

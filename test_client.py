@@ -1,5 +1,5 @@
 
-m socket import *
+from socket import *
 import argparse
 #import signal
 import sys
