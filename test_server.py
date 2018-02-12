@@ -1,4 +1,3 @@
-
 from socket import *
 
 import base64
@@ -31,6 +30,16 @@ while True:
             i = i + 1
 
         decode_string(full_string)
+       
+        doneMsg = 'done'
+        serverSocket.sendto(doneMsg.encode(),clientAddress)
+    else:
+        print("In else")
+        encode_string.append(message)
 
-"server.py" 44L, 1020C                              1,1           Top
+        print(message)
+
+        readyMsg = 'ready'
+
+        serverSocket.sendto(readyMsg.encode(), clientAddress)
 

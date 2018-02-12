@@ -1,4 +1,3 @@
-
 from socket import *
 import argparse
 #import signal
@@ -29,5 +28,26 @@ args = parser.parse_args()
 #       message = disconnect_str
 #       client_socket.sendto(message.encode(),(args.server_name,serverPort))
 #       client_socket.close()
-"client.py" 58L, 1340C                              21,1          Top
 
+string = encodeImage()
+
+encode_msgs = []
+
+while string:
+    encode_msgs.append(string[:500])
+    string = string[500:]
+
+i = 0
+
+while(i < len(encode_msgs)):
+    message = encode_msgs[i]
+    client_socket.sendto(message, (args.server_name,server_port))
+    server_message,serverAddress = client_socket.recvfrom(2048)
+    i = i + 1
+
+message = 'done'
+client_socket.sendto(message.encode(),(args.server_name,server_port))
+
+server_message,serverAddress = client_socket.recvfrom(2048)
+
+client_socket.close()
