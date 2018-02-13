@@ -141,4 +141,8 @@ https://raspberrypi.stackexchange.com/questions/67328/send-image-from-one-raspbe
 
 https://code.tutsplus.com/tutorials/base64-encoding-and-decoding-using-python--cms-25588
 
+## For compressing images using PIL in python
+
+https://stackoverflow.com/questions/10607468/how-to-reduce-the-image-file-size-using-pil
+
 
