@@ -19,8 +19,10 @@ The goal of this project is to connect two Raspberry Pi Zero Ws together using a
 7. Join this program with into one with the other programs
 
 ## Tasks that need to be added in somewhere:
-1. Figure out how to change Image to a string, and then from string back to Image
+1. ~Figure out how to change Image to a string, and then from string back to Image~
 2. Create a socket program to send image from server to client
+   2.1 Figure out how to compress an image using python
+      2.1.1 Try compressing the image after taking the picture
 3. Create bash scripts at some point
 
 ## Additional Info
@@ -138,5 +140,9 @@ https://raspberrypi.stackexchange.com/questions/67328/send-image-from-one-raspbe
 ### For encoding and decoding images in python
 
 https://code.tutsplus.com/tutorials/base64-encoding-and-decoding-using-python--cms-25588
+
+## For compressing images using PIL in python
+
+https://stackoverflow.com/questions/10607468/how-to-reduce-the-image-file-size-using-pil
 
 
