@@ -19,7 +19,7 @@ The goal of this project is to connect two Raspberry Pi Zero Ws together using a
 7. Join this program with into one with the other programs
 
 ## Tasks that need to be added in somewhere:
-1. Figure out how to change Image to a string, and then from string back to Image
+1. ~Figure out how to change Image to a string, and then from string back to Image~
 2. Create a socket program to send image from server to client
 3. Create bash scripts at some point
 
