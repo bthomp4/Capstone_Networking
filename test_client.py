@@ -10,8 +10,17 @@ from PIL import Image
 # for displaying the time
 from datetime import datetime
 
+DATA_SIZE = 497
+
+
 def encodeImage():
-    image = open('test2.jpg','rb')
+    #Compress the image
+    cam_pic = Image.open("test2.jpg")
+    print(cam_pic.size)
+    cam_pic = cam_pic.resize((800,480),Image.ANTIALIAS)
+    cam_pic.save("test2_scaled.jpg",quality=20) 
+
+    image = open('test2_scaled.jpg','rb')
     image_read = image.read()
     image_64_encode = base64.encodestring(image_read)
 
@@ -37,8 +46,8 @@ string = encodeImage()
 encode_msgs = []
 
 while string:
-    encode_msgs.append(string[:497])
-    string = string[497:]
+    encode_msgs.append(string[:DATA_SIZE])
+    string = string[DATA_SIZE:]
 
 i = 0
 
