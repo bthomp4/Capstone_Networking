@@ -1,7 +1,7 @@
 import base64
 from PIL import Image
 
-dog_image = Image.open("dog1.jpg")
-print(dog_image.size)
-dog_image = dog_image.resize((800,480),Image.ANTIALIAS)
-dog_image.save("dog1_scaled.jpg", quality=20)
+cam_pic = Image.open("test2.jpg")
+print(cam_pic.size)
+cam_pic = cam_pic.resize((800,480),Image.ANTIALIAS)
+cam_pic.save("test2_scaled.jpg", quality=20)
