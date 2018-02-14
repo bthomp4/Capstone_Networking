@@ -11,7 +11,7 @@ from PIL import Image
 from datetime import datetime
 
 def encodeImage():
-    image = open('dog1.jpg','rb')
+    image = open('test2.jpg','rb')
     image_read = image.read()
     image_64_encode = base64.encodestring(image_read)
 
@@ -37,8 +37,8 @@ string = encodeImage()
 encode_msgs = []
 
 while string:
-    encode_msgs.append(string[:500])
-    string = string[500:]
+    encode_msgs.append(string[:497])
+    string = string[497:]
 
 i = 0
 

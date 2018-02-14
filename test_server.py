@@ -9,7 +9,7 @@ from datetime import datetime
 
 def decode_string(image_64_encode):
     image_64_decode = base64.decodestring(image_64_encode)
-    image_result = open('dog1_decode.jpg','wb')
+    image_result = open('test2_decode.jpg','wb')
     image_result.write(image_64_decode)
 
 serverPort = 12000
