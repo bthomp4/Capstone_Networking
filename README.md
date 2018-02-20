@@ -21,8 +21,9 @@ The goal of this project is to connect two Raspberry Pi Zero Ws together using a
 ## Tasks that need to be added in somewhere:
 1. ~Figure out how to change Image to a string, and then from string back to Image~
 2. Create a socket program to send image from server to client
-   2.1 Figure out how to compress an image using python
-      2.1.1 Try compressing the image after taking the picture
+   ~2.1 Figure out how to compress an image using python~
+      ~2.1.1 Try compressing the image after taking the picture~
+    2.2 Optional: Sync the Client's time with the Server's time.
 3. Create bash scripts at some point
 
 ## Additional Info
