@@ -7,11 +7,14 @@ import sys
 import base64
 from PIL import Image
 
+# for displaying the time
+from datetime import datetime
+
 DATA_SIZE = 497
 
 def encodeImage():
     # Compress the image
-    cam_pic = Image.open("cameraPic.jpg")
+    cam_pic = Image.open("test2.jpg")
     cam_pic = cam_pic.resize((800,480),Image.ANTIALIAS)
     cam_pic.save("cameraPic_scaled.jpg",quality=20)
 
