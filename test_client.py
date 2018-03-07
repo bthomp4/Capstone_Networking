@@ -22,12 +22,10 @@ camera = PiCamera()
 
 def encodeImage():
     #Compress the image
-    #cam_pic = Image.open("test2.jpg")
+    cam_pic = Image.open(picture)
     
     #testing to see if this will work
     #cam_pic = test_camera.picture 
-
-    cam_pic = picture
 
     print(cam_pic.size)
     cam_pic = cam_pic.resize((800,480),Image.ANTIALIAS)
@@ -73,14 +71,17 @@ while True:
 
         # for debugging, displaying time
         #print(datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3])
-    
+        print("sending picture data")
         client_socket.sendto(message, (args.server_name,server_port))
         server_message,serverAddress = client_socket.recvfrom(2048)
+        print("recieved server message")
         i = i + 1
 
+    print("sending done msg to server")
     message = 'done'
     client_socket.sendto(message.encode(),(args.server_name,server_port))
 
+    print("client done, waiting for server")
     server_message,serverAddress = client_socket.recvfrom(2048)
 
 #client_socket.close()

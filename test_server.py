@@ -5,7 +5,7 @@ import base64
 from PIL import Image
 
 # for displaying the time
-from datetime import datetime
+#from datetime import datetime
 
 def decode_string(image_64_encode):
     image_64_decode = base64.decodestring(image_64_encode)
@@ -23,7 +23,7 @@ while True:
     message, clientAddress = serverSocket.recvfrom(2048)
    
     # for debugging, displaying the time 
-    print(datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3])
+    #print(datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3])
 
     if message.decode() == 'done':
         full_string = b''
