@@ -4,6 +4,8 @@ from socket import *
 import base64
 from PIL import Image
 
+from time import sleep
+
 # for displaying the time
 #from datetime import datetime
 
@@ -13,8 +15,6 @@ def decode_string(image_64_encode):
     image_64_decode = base64.decodestring(image_64_encode)
     image_result = open(picture,'wb')
     image_result.write(image_64_decode)
-    im = Image.open(picture)
-    im.show()
 
 serverPort = 12000
 serverSocket = socket(AF_INET, SOCK_DGRAM)
@@ -39,6 +39,12 @@ while True:
 
         decode_string(full_string)
        
+        im = Image.open(picture)
+
+        im.show()
+        sleep(2)
+        im.close()
+
         doneMsg = 'done'
         serverSocket.sendto(doneMsg.encode(),clientAddress)
     else:
@@ -49,4 +55,3 @@ while True:
         readyMsg = 'ready'
 
         serverSocket.sendto(readyMsg.encode(), clientAddress)
-
