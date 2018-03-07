@@ -34,7 +34,7 @@ def encodeImage(num):
     else:
         scaledPic = 'clown_scaled.jpg'
 
-    print(cam_pic.size)
+    #print(cam_pic.size)
     cam_pic = cam_pic.resize((800,480),Image.ANTIALIAS)
     cam_pic.save(scaledPic,quality=20) 
 
