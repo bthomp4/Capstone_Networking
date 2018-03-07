@@ -4,7 +4,7 @@ import argparse
 import sys
 
 #including test_camera program
-import test_camera
+#import test_camera
 
 # for encoding the image 
 import base64
@@ -13,15 +13,21 @@ from PIL import Image
 # for displaying the time
 from datetime import datetime
 
-DATA_SIZE = 497
+from picamera import PiCamera
 
+DATA_SIZE = 497
+picture = 'test.jpg'
+
+camera = PiCamera()
 
 def encodeImage():
     #Compress the image
     #cam_pic = Image.open("test2.jpg")
     
     #testing to see if this will work
-    cam_pic = test_camera.picture 
+    #cam_pic = test_camera.picture 
+
+    cam_pic = picture
 
     print(cam_pic.size)
     cam_pic = cam_pic.resize((800,480),Image.ANTIALIAS)
@@ -48,29 +54,33 @@ args = parser.parse_args()
 #       client_socket.sendto(message.encode(),(args.server_name,serverPort))
 #       client_socket.close()
 
-string = encodeImage()
+while True:
 
-encode_msgs = []
+    camera.capture(picture)
 
-while string:
-    encode_msgs.append(string[:DATA_SIZE])
-    string = string[DATA_SIZE:]
+    string = encodeImage()
 
-i = 0
+    encode_msgs = []
 
-while(i < len(encode_msgs)):
-    message = encode_msgs[i]
+    while string:
+        encode_msgs.append(string[:DATA_SIZE])
+        string = string[DATA_SIZE:]
 
-    # for debugging, displaying time
-    print(datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3])
+    i = 0
+
+    while(i < len(encode_msgs)):
+        message = encode_msgs[i]
+
+        # for debugging, displaying time
+        #print(datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3])
     
-    client_socket.sendto(message, (args.server_name,server_port))
+        client_socket.sendto(message, (args.server_name,server_port))
+        server_message,serverAddress = client_socket.recvfrom(2048)
+        i = i + 1
+
+    message = 'done'
+    client_socket.sendto(message.encode(),(args.server_name,server_port))
+
     server_message,serverAddress = client_socket.recvfrom(2048)
-    i = i + 1
 
-message = 'done'
-client_socket.sendto(message.encode(),(args.server_name,server_port))
-
-server_message,serverAddress = client_socket.recvfrom(2048)
-
-client_socket.close()
+#client_socket.close()
