@@ -7,11 +7,13 @@ from PIL import Image
 # for displaying the time
 #from datetime import datetime
 
+picture = "test_decode.jpg"
+
 def decode_string(image_64_encode):
     image_64_decode = base64.decodestring(image_64_encode)
-    image_result = open('test2_decode.jpg','wb')
+    image_result = open(picture,'wb')
     image_result.write(image_64_decode)
-
+    Image.open(picture).show()
 serverPort = 12000
 serverSocket = socket(AF_INET, SOCK_DGRAM)
 serverSocket.bind(('',serverPort))
