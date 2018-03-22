@@ -1,5 +1,6 @@
 import tkinter
 from PIL import Image, ImageTk
+#Source: https://bytes.com/topic/python/answers/933486-tkinter-reloading-window-displaying-image
 
 def update_image():
     global camImg
