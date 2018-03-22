@@ -4,14 +4,14 @@ import time
 
 class SampleApp(tk.Tk):
     def __init__(self,*args,**kwargs):
-        tk.Tk.__init__(self,*args,**kargs)
+        tk.Tk.__init__(self,*args,**kwargs)
         self.root = tk.Frame()
         self.root.pack()
 
         self.update_image()
 
     def update_image(self):
-        im = Image.open("dog.jpg")
+        im = Image.open("dog")
         photo = ImageTk.PhotoImage(im)
         label = tk.Label(self.root,image=photo)
         label.photo = photo
