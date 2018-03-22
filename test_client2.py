@@ -3,9 +3,6 @@ import argparse
 #import signal
 import sys
 
-#including test_camera program
-#import test_camera
-
 # for encoding the image 
 import base64
 from PIL import Image
@@ -15,24 +12,19 @@ from datetime import datetime
 
 #from picamera import PiCamera
 
+picture = "tempPic.jpg"
+
 DATA_SIZE = 497
 
-picture = ['dog.jpg','clown.jpg']
-
-#camera = PiCamera()
-
-def encodeImage(num):
+def encodeImage():
     #Compress the image
 
-    cam_pic = Image.open(picture[num])
+    cam_pic = Image.open(picture)
     
     #testing to see if this will work
     #cam_pic = test_camera.picture 
 
-    if (num == 0):
-        scaledPic = 'dog_scaled.jpg'
-    else:
-        scaledPic = 'clown_scaled.jpg'
+    scaledPic = "pic_scaled.jpg"
 
     #print(cam_pic.size)
     cam_pic = cam_pic.resize((800,480),Image.ANTIALIAS)
@@ -65,12 +57,7 @@ while True:
 
     #camera.capture(picture)
 
-    string = encodeImage(pic_num)
-
-    if (pic_num == 1):
-        pic_num = 0
-    else:
-        pic_num = pic_num + 1
+    string = encodeImage()
 
     encode_msgs = []
 

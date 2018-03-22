@@ -4,24 +4,48 @@ from socket import *
 import base64
 from PIL import Image
 
-from time import sleep
+#for displaying image
+import tkinter
+from PIL import Image,ImageTk
 
-# for displaying the time
+#for displaying the time
 #from datetime import datetime
 
+#starts out blank in beginning of program
 picture = "test_decode.jpg"
 
+#Function Name: decode_string
+#Usage: Decodes the image from the client
 def decode_string(image_64_encode):
     image_64_decode = base64.decodestring(image_64_encode)
     image_result = open(picture,'wb')
     image_result.write(image_64_decode)
+
+#Function Name: update_image
+def update_image():
+    global camImg
+    camImg = ImageTk.PhotoImage(Image.open(picture))
+    label.config(image = camImg)
+    label.after(1000,update_image)
+    print("Updated")
 
 serverPort = 12000
 serverSocket = socket(AF_INET, SOCK_DGRAM)
 serverSocket.bind(('',serverPort))
 print("The server is ready to recieve")
 
+#array to hold encoded string from client
 encode_string = []
+
+#coming from displayImage program
+w = tkinter.Tk()
+im = Image.open(picture)
+camImg = ImageTk.PhotoImage(im)
+label = tkinter.Label(w,image=camImg)
+print("Loaded")
+label.pack()
+w.after(1000,update_image)
+w.mainloop()
 
 while True:
     message, clientAddress = serverSocket.recvfrom(2048)
@@ -38,12 +62,6 @@ while True:
             i = i + 1
 
         decode_string(full_string)
-       
-        im = Image.open(picture)
-
-        im.show()
-        sleep(2)
-        im.close()
 
         doneMsg = 'done'
         serverSocket.sendto(doneMsg.encode(),clientAddress)
