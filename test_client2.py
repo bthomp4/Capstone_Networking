@@ -10,6 +10,8 @@ from PIL import Image
 # for displaying the time
 from datetime import datetime
 
+from time import sleep
+
 #from picamera import PiCamera
 
 picture = "tempPic.jpg"
@@ -54,7 +56,7 @@ args = parser.parse_args()
 pic_num = 0
 
 while True:
-
+    sleep(1)
     #camera.capture(picture)
 
     string = encodeImage()
@@ -84,5 +86,7 @@ while True:
 
     print("client done, waiting for server")
     server_message,serverAddress = client_socket.recvfrom(2048)
+
+    print(server_message.decode())	
 
 #client_socket.close()

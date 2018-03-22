@@ -46,33 +46,31 @@ print("Loaded")
 label.pack()
 
 # begin loop
-while True:
-    message, clientAddress = serverSocket.recvfrom(2048)
+message, clientAddress = serverSocket.recvfrom(2048)
 
-    # for debugging, displaying the time 
-    #print(datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3])
+# for debugging, displaying the time 
+#print(datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3])
 
-    if message.decode() == 'done':
-        full_string = b''
-        i = 0
+if message.decode() == 'done':
+    full_string = b''
+    i = 0
 
-        while(i < len(encode_string)):
-            full_string = full_string + encode_string[i]
-            i = i + 1
+    while(i < len(encode_string)):
+        full_string = full_string + encode_string[i]
+        i = i + 1
 
-        decode_string(full_string)
+    decode_string(full_string)
 
-        #update the image after its been decoded
-        w.after(1000,update_image) 
-        doneMsg = 'done'
-        serverSocket.sendto(doneMsg.encode(),clientAddress)
-    else:
-        encode_string.append(message)
+    #update the image after its been decoded
+    update_image() 
+    doneMsg = 'done'
+    serverSocket.sendto(doneMsg.encode(),clientAddress)
+else:
+    encode_string.append(message)
 
-        print(message)
+    print(message)
 
-        readyMsg = 'ready'
+    readyMsg = 'ready'
 
-        serverSocket.sendto(readyMsg.encode(), clientAddress)
-    w.update()
-    #w.update_idletasks()
+    serverSocket.sendto(readyMsg.encode(), clientAddress)
+w.mainloop()
