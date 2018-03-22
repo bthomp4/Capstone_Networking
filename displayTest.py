@@ -1,6 +1,7 @@
 import tkinter as tk
 from PIL import Image, ImageTk
 import time
+#program display multiple images in one window, not functional
 
 class SampleApp(tk.Tk):
     def __init__(self,*args,**kwargs):
