@@ -3,9 +3,6 @@ import argparse
 #import signal
 import sys
 
-#including test_camera program
-#import test_camera
-
 # for encoding the image 
 import base64
 from PIL import Image
@@ -24,9 +21,6 @@ def encodeImage():
     #Compress the image
     cam_pic = Image.open(picture)
     
-    #testing to see if this will work
-    #cam_pic = test_camera.picture 
-
     print(cam_pic.size)
     cam_pic = cam_pic.resize((800,480),Image.ANTIALIAS)
     cam_pic.save("test2_scaled.jpg",quality=20) 

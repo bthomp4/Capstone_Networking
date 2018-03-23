@@ -23,9 +23,6 @@ def encodeImage():
 
     cam_pic = Image.open(picture)
     
-    #testing to see if this will work
-    #cam_pic = test_camera.picture 
-
     scaledPic = "pic_scaled.jpg"
 
     #print(cam_pic.size)
