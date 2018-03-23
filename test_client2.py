@@ -53,10 +53,7 @@ args = parser.parse_args()
 #       client_socket.sendto(message.encode(),(args.server_name,serverPort))
 #       client_socket.close()
 
-pic_num = 0
-
 while True:
-    sleep(1)
     #camera.capture(picture)
 
     string = encodeImage()
@@ -87,6 +84,6 @@ while True:
     print("client done, waiting for server")
     server_message,serverAddress = client_socket.recvfrom(2048)
 
-    print(server_message.decode())	
+    #print(server_message.decode())	
 
 #client_socket.close()

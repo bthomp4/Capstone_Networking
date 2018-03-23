@@ -1,12 +1,9 @@
 from socket import *
 
-# for decoding the image
+# for decoding and displaying the image
 import base64
-from PIL import Image
-
-#for displaying the image
+from PIL import Image,ImageTk
 import tkinter
-from PIL import Image, ImageTk
 
 from time import sleep
 
@@ -16,27 +13,30 @@ from time import sleep
 #starts out blank in beginning of program
 picture = "test_decode.jpg"
 
+# array to hold encoded string from client
+encode_string = []
+
 #Function Name: decode_string
 #Usage: Decodes the image from the client
 def decode_string(image_64_encode):
+    global encode_string
+    encode_string = []
     image_64_decode = base64.decodestring(image_64_encode)
-    image_result = open(picture,'wb')
-    image_result.write(image_64_decode)
+    with open(picture,'wb') as image_result:
+        image_result.write(image_64_decode)
+    update_image()
 
 def update_image():
     global camImg
     camImg = ImageTk.PhotoImage(Image.open(picture))
     label.config(image = camImg)
-    label.after(1000,update_image)
+    label.pack()
     print("Updated")
 
 serverPort = 12000
 serverSocket = socket(AF_INET, SOCK_DGRAM)
 serverSocket.bind(('',serverPort))
 print("The server is ready to recieve")
-
-# array to hold encoded string from client
-encode_string = []
 
 w = tkinter.Tk()
 im = Image.open(picture)
@@ -53,6 +53,7 @@ while True:
     #print(datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3])
 
     if message.decode() == 'done':
+        print("if")
         full_string = b''
         i = 0
 
@@ -62,17 +63,13 @@ while True:
 
         decode_string(full_string)
 
-        #update the image after its been decoded
-        w.after(1000,update_image) 
         doneMsg = 'done'
         serverSocket.sendto(doneMsg.encode(),clientAddress)
     else:
         encode_string.append(message)
 
-        print(message)
-
         readyMsg = 'ready'
 
         serverSocket.sendto(readyMsg.encode(), clientAddress)
     w.update()
-    #w.update_idletasks()
+    w.update_idletasks()

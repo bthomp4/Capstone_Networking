@@ -6,13 +6,13 @@ from time import sleep
 
 #from test_server import picture
 
-picture = "test_decode.jpg"
+picture = "tempPic.jpg"
 
 def update_image():
     global camImg
     camImg = ImageTk.PhotoImage(Image.open(picture))
     label.config(image = camImg)
-    label.after(1000,update_image)
+    #label.after(1000,update_image)
     print("Updated")
 
 w = tkinter.Tk()
@@ -23,8 +23,9 @@ print("Loaded")
 label.pack()
 #w.after(1000,update_image)
 #w.mainloop()
-#while True:
-sleep(1)
-update_image()
-    #w.after(0,update_image)
-w.mainloop()
+while True:
+    sleep(1)
+    w.after(0,update_image)
+    #w.mainloop()
+    w.update()
+    w.update_idletasks()
