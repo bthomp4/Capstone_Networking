@@ -1,25 +1,42 @@
 from socket import *
-import signal
-import sys
+#import signal
+#import sys
 
-#for decoding the image
+# for decoding and displaying the image
 import base64
-from PIL import Image
+from PIL import Image, ImageTk
+import tkinter
 
-#for displaying the time
-from datetime import datetime
+from time import sleep
 
+# starts out blank in beginning of program
+picture = "test_decode.jpg"
+
+# array to hold encoded string from client
+encode_string = []
+
+# Function Name: decode_string
+# Purpose: Decodes the image from the client
 def decode_string(image_64_encode):
+    global encode_string
+    encode_string = []
     image_64_decode = base64.decodestring(image_64_encode)
-    image_result = open('test2_decode.jpg','wb')
-    image_result.write(image_64_decode)
+    with open(picture,'wb') as image_result:
+        image_result.write(image_64_decode)
+    update_image()
+
+# Function Name: update_image
+# Purpose: Updates the image being displayed in tkinter gui
+def update_image():
+    global camImg
+    camImg = ImageTk.PhotoImage(Image.open(picture))
+    label.config(image = camImg)
+    label.pack()
 
 server_port = 12000
 serverSocket = socket(AF_INET,SOCK_DGRAM)
 serverSocket.bind(('',server_port))
 print("The server is ready to recieve")
-
-encode_string = []
 
 #discnt_client_str = 'DCNT, BYE REAR UNIT!'
 #discnt_server_str = 'DCNT, Server Disconnected!'
@@ -34,11 +51,14 @@ encode_string = []
 
 #signal.signal(signal.SIGINT,signal_handler)
 
+w = tkinter.Tk()
+im = Image.open(picture)
+camImg = ImageTk.PhotoImage(im)
+label = tkinter.Label(w,image=camImg)
+label.pack()
+
 while True:
     message, clientAddress = serverSocket.recvfrom(2048)
-
-    # for debugging, displaying the time
-    print(datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3])
 
     if message.decode() == 'done':
         full_string = b''
@@ -55,8 +75,10 @@ while True:
     else:
         encode_string.append(message)
 
-        print(message)
+        #print(message)
 
         readyMsg = 'ready'
 
         serverSocket.sendto(readyMsg.encode(), clientAddress)
+    w.update()
+    w.update_idletasks()
