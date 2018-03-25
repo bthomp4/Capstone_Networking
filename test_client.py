@@ -13,7 +13,7 @@ from datetime import datetime
 from picamera import PiCamera
 
 DATA_SIZE = 497
-picture = 'test.jpg'
+picture = "test.jpg"
 
 camera = PiCamera()
 
@@ -21,7 +21,6 @@ def encodeImage():
     #Compress the image
     cam_pic = Image.open(picture)
     
-    print(cam_pic.size)
     cam_pic = cam_pic.resize((800,480),Image.ANTIALIAS)
     cam_pic.save("test2_scaled.jpg",quality=20) 
 
