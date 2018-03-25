@@ -1,24 +1,30 @@
+# This program will be the final version for the Client program
+
 from socket import *
 import argparse
-import signal
-import sys
+#import signal
+#import sys
 
 # for encoding the image
 import base64
 from PIL import Image
 
-# for displaying the time
-from datetime import datetime
+from picamera import PiCamera
 
 DATA_SIZE = 497
+picture = "cameraPic.jpg"
+scaledPic = "cameraPic_scaled.jpg"
+
+camera = PiCamera()
 
 def encodeImage():
     # Compress the image
-    cam_pic = Image.open("test2.jpg")
-    cam_pic = cam_pic.resize((800,480),Image.ANTIALIAS)
-    cam_pic.save("cameraPic_scaled.jpg",quality=20)
+    cam_pic = Image.open(picture)
 
-    image = open("cameraPic_scaled.jpg",'rb')
+    cam_pic = cam_pic.resize((800,480),Image.ANTIALIAS)
+    cam_pic.save(scaledPic,quality=20)
+
+    image = open(scaledPic,'rb')
     image_read = image.read()
     image_64_encode = base64.encodestring(image_read)
 
@@ -31,42 +37,42 @@ parser = argparse.ArgumentParser(description='sending images')
 parser.add_argument('-s', dest='server_name', help='specifies the IP of the server, this is required', required=True)
 args = parser.parse_args()
 
-disconnect_str = 'DCNT'
-ssd_str = 'SSD'
-rcd_str = 'RCD'
+#disconnect_str = 'DCNT'
+#ssd_str = 'SSD'
+#rcd_str = 'RCD'
 
-def signal_handler(signal,frame):
-	print('Ctrl+C pressed')
-	message = disconnect_str
-	client_socket.sendto(message.encode(),(args.server_name,serverPort))
-	client_socket.close()
-	sys.exit(0)
+#def signal_handler(signal,frame):
+#	print('Ctrl+C pressed')
+#	message = disconnect_str
+#	client_socket.sendto(message.encode(),(args.server_name,serverPort))
+#	client_socket.close()
+#	sys.exit(0)
 
-signal.signal(signal.SIGINT,signal_handler)
+#signal.signal(signal.SIGINT,signal_handler)
 
-string = encodeImage()
+while True:
+    camera.capture(picture)
 
-encode_msgs = []
+    string = encodeImage()
 
-while string:
-    encode_msgs.append(string[:DATA_SIZE])
-    string = string[DATA_SIZE:]
+    encode_msgs = []
 
-i = 0
+    while string:
+        encode_msgs.append(string[:DATA_SIZE])
+        string = string[DATA_SIZE:]
 
-while(i < len(encode_msgs)):
-    message = encode_msgs[i]
+    i = 0
 
-    # for debugging, displaying time
-    print(datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3])
+    while(i < len(encode_msgs)):
+        message = encode_msgs[i]
 
-    client_socket.sendto(message, (args.server_name,server_port))
+        client_socket.sendto(message, (args.server_name,server_port))
+        server_message,serverAddress = client_socket.recvfrom(2048)
+        i = i + 1
+
+    message = 'done'
+    client_socket.sendto(message.encode(),(args.server_name,server_port))
+
     server_message,serverAddress = client_socket.recvfrom(2048)
-    i = i + 1
-
-message = 'done'
-client_socket.sendto(message.encode(),(args.server_name,server_port))
-
-server_message,serverAddress = client_socket.recvfrom(2048)
 
 client_socket.close()
