@@ -40,8 +40,6 @@ parser.add_argument('-s', dest='server_name', help='specifies the IP of the serv
 args = parser.parse_args()
 
 while True:
-    #camera.capture(picture)
-
     string = encodeImage()
 
     encode_msgs = []
@@ -52,19 +50,39 @@ while True:
 
     i = 0
 
-    while(i < len(encode_msgs)):
-        message = encode_msgs[i]
+    # segment size
+    SS = len(encode_msgs)
+    newSS = str(SS)
+    
+    # pad segment size to be 4 bytes
+    if (len(str(SS)) != 4):
+        for i in range(0,len(str(SS))):
+            newSS = newSS + '0'
+        newSS = newSS + str(SS)
+    SS = int(newSS)
 
-        # for debugging, displaying time
-        #print(datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3])
-        print("sending picture data")
-        client_socket.sendto(message, (args.server_name,server_port))
+    while(i < len(encode_msgs)):
+        newSN = ''
+        data = encode_msgs[i]
+
+        # pad segment number to be 4 bytes
+        if (len(str(i)) != 4):
+            for j in range(0,len(str(i))):
+                newSN = newSN + '0'
+            newSN = newSN + str(i)
+        SN = int(newSN)
+        # DATA_CAM Flag == 5
+        message = "5," + str(SS) + "," + str(SN) + "," 
+
+        print("Sending Packet to Server")
+        client_socket.sendto(message.encode() + data, (args.server_name,server_port))
+        print("Recieving ready from server")
         server_message,serverAddress = client_socket.recvfrom(2048)
-        print("recieved server message")
         i = i + 1
 
     print("sending done msg to server")
     message = 'done'
+
     client_socket.sendto(message.encode(),(args.server_name,server_port))
 
     print("client done, waiting for server")
