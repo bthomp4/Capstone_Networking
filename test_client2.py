@@ -13,22 +13,23 @@ from datetime import datetime
 from time import sleep
 
 picture = "tempPic.jpg"
+scaledPic = "pic_scaled.jpg"
 
-DATA_SIZE = 497
+DATA_SIZE = 500
+SS_FlagSize = 4
+SN_FlagSize = 4
 
 def encodeImage():
     #Compress the image
-
     cam_pic = Image.open(picture)
-    
-    scaledPic = "pic_scaled.jpg"
 
     cam_pic = cam_pic.resize((800,480),Image.ANTIALIAS)
     cam_pic.save(scaledPic,quality=20) 
 
-    image = open(scaledPic,'rb')
-    image_read = image.read()
-    image_64_encode = base64.encodestring(image_read)
+    with open(scaledPic,'rb') as image:
+        image_64_encode = base64.encodestring(image.read())
+
+    print(image_64_encode)
 
     return image_64_encode
 
@@ -48,34 +49,35 @@ while True:
         encode_msgs.append(string[:DATA_SIZE])
         string = string[DATA_SIZE:]
 
-    i = 0
+    num_packet = 0
 
     # segment size
-    SS = len(encode_msgs)
-    newSS = str(SS)
+    SS = str(len(encode_msgs))
     
     # pad segment size to be 4 bytes
-    if (len(str(SS)) != 4):
-        for i in range(0,len(str(SS))):
-            newSS = newSS + '0'
-        newSS = newSS + str(SS)
-    SS = int(newSS)
+    if (len(SS) != SS_FlagSize):
+        for i in range(0,(SS_FlagSize - len(SS))):
+            SS = '0' + SS
 
-    while(i < len(encode_msgs)):
-        newSN = ''
-        data = encode_msgs[i]
+    while(num_packet < len(encode_msgs)):
+        data = encode_msgs[num_packet]
+
+        # Segment Number
+        SN = str(num_packet)
 
         # pad segment number to be 4 bytes
-        if (len(str(i)) != 4):
-            for j in range(0,len(str(i))):
-                newSN = newSN + '0'
-            newSN = newSN + str(i)
-        SN = int(newSN)
+        if (len(SN) != SN_FlagSize):
+            for l in range(0,(SN_FlagSize + len(SN))):
+                SN = '0' + SN
+
         # DATA_CAM Flag == 5
-        message = "5," + str(SS) + "," + str(SN) + "," 
+        packetInfo = '5,' + SS + ',' + 'str(SN)' + ',' 
+
+        print(packetInfo.encode() + data)
 
         print("Sending Packet to Server")
-        client_socket.sendto(message.encode() + data, (args.server_name,server_port))
+        client_socket.sendto(packetInfo.encode() + data, (args.server_name,server_port))
+        #client_socket.sendto(data,(args.server_name,server_port))
         print("Recieving ready from server")
         server_message,serverAddress = client_socket.recvfrom(2048)
         i = i + 1
@@ -88,6 +90,4 @@ while True:
     print("client done, waiting for server")
     server_message,serverAddress = client_socket.recvfrom(2048)
 
-    #print(server_message.decode())	
-
-#client_socket.close()
+client_socket.close()
