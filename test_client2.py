@@ -71,7 +71,7 @@ while True:
                 SN = '0' + SN
 
         # DATA_CAM Flag == 5
-        packetInfo = '5,' + SS + ',' + 'str(SN)' + ',' 
+        packetInfo = '5,' + SS + ',' + SN + ',' 
 
         print(packetInfo.encode() + data)
 
@@ -80,7 +80,7 @@ while True:
         #client_socket.sendto(data,(args.server_name,server_port))
         print("Recieving ready from server")
         server_message,serverAddress = client_socket.recvfrom(2048)
-        i = i + 1
+        num_packet = num_packet + 1
 
     print("sending done msg to server")
     message = 'done'
