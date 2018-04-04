@@ -67,8 +67,8 @@ while True:
         
         decode_string(full_string)
 
-        doneMsg = 'done'
-        serverSocket.sendto(doneMsg.encode(),clientAddress)
+        #doneMsg = 'done'
+        #serverSocket.sendto(doneMsg.encode(),clientAddress)
     else:
         packet_count = packet_count + 1
         
@@ -99,8 +99,29 @@ while True:
                     break
             
             # if there is a lost packet, packet_dropped will != -1
-            message = str(packet_dropped)
-            serverSocket.sendto(message.encode(),clientAddress) 
+            packetDrop_message = str(packet_dropped)
+            serverSocket.sendto(packetDrop_message.encode(),clientAddress) 
+
+            while (packet_dropped != -1):
+                packet_count = packet_count + 1
+                message,clientAddress = serverSocket.recvfrom(2048)
+                splitPacket = message.split(b',')
+                MSG_Flag = int(splitPacket[0])
+                SegmentSize = int(splitPacket[1])
+                SegmentNum = int(splitPacket[2])
+                packetsRec[SegmentNum] = 1
+                encode_string[SegmentNum] = splitPacket[3]
+ 
+                if (packet_count == (SegmentSize//8)):
+                    packet_count = 0
+                    packet_dropped = -1
+                    for i in range(check_pt,SegmentNum):
+                        if packetsRec[i] == 0:
+                            packet_dropped = i
+                            break
+
+                    packetDrop_message = str(packet_dropped)
+                    serverSocket.sendto(packetDrop_message.encode(),clientAddress)
 
         check_pt = check_pt + (SegmentSize//8)
         #readyMsg = 'ready'
