@@ -27,7 +27,11 @@ Server:
 					- (this allows for finding the earliest packet that was dropped)
 			- send a message to client containing the value of packet_dropped
 				- the value of packet_dropped corresponds to the earliest packet that was dropped
-		- what to do now?
+		- while packet_dropped value is -1
+			- increase the packet count
+                        - receive the new message from the client
+			- obtain the info by spliting packet
+                        - store data in encode_string[SegmentNum] = splitPacket[3]
 		- else -->
 			- continue recieving packets and don't send anything to client
 
