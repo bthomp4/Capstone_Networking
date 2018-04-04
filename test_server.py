@@ -7,14 +7,17 @@ import tkinter
 
 from time import sleep
 
-#for displaying the time
+# for displaying the time
 #from datetime import datetime
 
-#starts out blank in beginning of program
+# starts out blank in beginning of program
 picture = "test_decode.jpg"
 
 # array to hold encoded string from client
 encode_string = []
+
+# Max Segment Size
+MAX_SS = 9999
 
 #Function Name: decode_string
 #Usage: Decodes the image from the client
@@ -43,8 +46,13 @@ camImg = ImageTk.PhotoImage(im)
 label = tkinter.Label(w,image=camImg)
 label.pack()
 
+packet_count = 0
+check_pt = 0
+packetsRec = [0] * MAX_SS
+
 # begin loop
 while True:
+
     # for testing dropped packets
 
     message, clientAddress = serverSocket.recvfrom(2048)
@@ -62,19 +70,42 @@ while True:
         doneMsg = 'done'
         serverSocket.sendto(doneMsg.encode(),clientAddress)
     else:
+        packet_count = packet_count + 1
+        
         # Split up packet
         splitPacket = message.split(b',')
+
+	# First element = MSG_Flag
+        MSG_Flag = int(splitPacket[0])
+
+        # Second element = SS
+        SegmentSize = int(splitPacket[1])
+
+        # Third element = SN
+        SegmentNum = int(splitPacket[2]) 
        
+        packetsRec[SegmentNum] = 1
+
         # Append the encoded image data 
         encode_string.append(splitPacket[3])
 
-        #encode_string.append(message)
+        if (packet_count == (SegmentSize//8)):
+            packet_count = 0
+            packet_dropped = -1
+            # loop through up to recent SN and see if there are any lost packets
+            for i in range(check_pt,SegmentNum):
+                if packetsRec[i] == 0:
+                    packet_dropped = i
+                    break
+            
+            # if there is a lost packet, packet_dropped will != -1
+            message = str(packet_dropped)
+            serverSocket.sendto(message.encode(),clientAddress) 
 
-        print(splitPacket[3])
-
-        readyMsg = 'ready'
+        check_pt = check_pt + (SegmentSize//8)
+        #readyMsg = 'ready'
         
-        print("sending ready to client")
-        serverSocket.sendto(readyMsg.encode(), clientAddress)
+        #print("sending ready to client")
+        #serverSocket.sendto(readyMsg.encode(), clientAddress)
     w.update()
     w.update_idletasks()
