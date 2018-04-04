@@ -1,0 +1,69 @@
+Server:
+- recieve a packet
+- if --> message.decode() == 'done':
+	- concatenate the encode_string into another array full_string
+	- decode the full_string
+	- send message back to client saying it is done 
+	- picture is displayed
+- else -->
+	- packet_count = packet_count + 1
+	- Split packet based on commas
+		- Assign first element the MessageFlag (either 5 = Camera Data or ? = Sensor Data)
+		- Assign second element the SegmentSize 
+		- Assign third element the SegmentNumber 
+	- Set the packetsRec[SegmentNumber] = 1
+		- packetsRec array initialized to all zeros and size of 9999
+		- '1' indicates that the packet was recieved, '0' indicates the packet wasnt recieved
+	- Append the string message (500 bytes long) to encode_string array
+
+	- The following is for checking for packet loss:
+		- Now check if the packet_count recieved has reached 1/8 of the SegmentSize
+		- if (packet_count == (SegmentSize//8)) -->
+			- set packet count back to 0
+			- initalize packet_dropped variable to -1
+			- loop through the packetsRec[] from the current check point up to the current SegmentNum
+				- if (the element is equal to 0) -->
+					- set the packets_dropped value to that index and break
+					- (this allows for finding the earliest packet that was dropped)
+			- send a message to client containing the value of packet_dropped
+				- the value of packet_dropped corresponds to the earliest packet that was dropped
+		- what to do now?
+		- else -->
+			- continue recieving packets and don't send anything to client
+
+Client:
+- encode the image and save as a string
+- create a encode_msgs array that will contain elements that are 500 bytes long, which are chopped up from the full image string
+	done by:
+		while string:
+			encode_msgs.append(string[:DATA_SIZE])
+			string = string[DATA_SIZE:]
+- set num_packet value for keeping track of how many packets have been sent
+- create the segment size variable, which is the length of the encode_msgs array
+- pad the segement size variable to be 4 bytes long
+	- simply padded with zeros in the front
+- set the check_point variable
+	- Used for keeping track of how many messages to send before waiting for ack from server
+- set packet_count variable
+	- Used for keeping track of # of messages
+- create while loop to loop through packets being sent
+	- while(num_packet < len(encode_msgs)):
+	- simulate packet loss (for debugging purposes currently)
+		- created a list of drop_packets
+		- so if num_packet not in drop_packets then send packet
+			- set new data value --> encode_msgs[num_packet]
+			- set the segment number
+			- pad the segment number to be 4 bytes
+			- set the packet info	
+				FLAG,SS,SN,DATA
+			- send the packet (concatenating the encoded data)
+			- increment the packet_count value
+		- if packet_count = to the check_point value -->
+			- reset the packet_count back to 0
+			- wait for ack from server (including the packet_dropped value, -1 is no packets lost and some other value if there was packet loss)
+			- decode the message to obtain the value
+			- enter while loop (while packet_lost != -1)
+			- start resending packets starting with encode_msgs[packet_lost] up to encode_msgs[SegmentNum]
+				- Using for loop
+			- After loop is finished, wait for ack from server again
+		- After packet_lost no longer equals anything but -1, proceed with sending packets again
