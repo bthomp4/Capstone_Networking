@@ -54,10 +54,10 @@ packetsRec = [0] * MAX_SS
 while True:
 
     # for testing dropped packets
-
     message, clientAddress = serverSocket.recvfrom(2048)
 
     if message.decode() == 'done':
+        print("Client done sending all packets for image")
         full_string = b''
         i = 0
 
@@ -67,10 +67,11 @@ while True:
         
         decode_string(full_string)
 
-        #doneMsg = 'done'
-        #serverSocket.sendto(doneMsg.encode(),clientAddress)
+        doneMsg = 'done'
+        serverSocket.sendto(doneMsg.encode(),clientAddress)
     else:
-        packet_count = packet_count + 1
+        print("Another packet for the image")
+        #packet_count = packet_count + 1
         
         # Split up packet
         splitPacket = message.split(b',')
@@ -89,8 +90,11 @@ while True:
         # Append the encoded image data 
         encode_string.append(splitPacket[3])
 
-        if (packet_count == (SegmentSize//8)):
-            packet_count = 0
+        print("Segment Num: " + str(SegmentNum))
+
+        if ((SegmentNum + 1) % (SegmentSize//8) == 0):
+            print("reached check point")
+            #packet_count = 0
             packet_dropped = -1
             # loop through up to recent SN and see if there are any lost packets
             for i in range(check_pt,SegmentNum):
@@ -99,11 +103,13 @@ while True:
                     break
             
             # if there is a lost packet, packet_dropped will != -1
+            print("Sending packet_dropped message to client")
             packetDrop_message = str(packet_dropped)
             serverSocket.sendto(packetDrop_message.encode(),clientAddress) 
 
             while (packet_dropped != -1):
-                packet_count = packet_count + 1
+                print("while packet_dropped != -1")
+                #packet_count = packet_count + 1
                 message,clientAddress = serverSocket.recvfrom(2048)
                 splitPacket = message.split(b',')
                 MSG_Flag = int(splitPacket[0])
@@ -112,8 +118,8 @@ while True:
                 packetsRec[SegmentNum] = 1
                 encode_string[SegmentNum] = splitPacket[3]
  
-                if (packet_count == (SegmentSize//8)):
-                    packet_count = 0
+                if ((SegmentNum + 1) % (SegmentSize//8) == 0):
+                    #packet_count = 0
                     packet_dropped = -1
                     for i in range(check_pt,SegmentNum):
                         if packetsRec[i] == 0:
