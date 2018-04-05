@@ -20,7 +20,8 @@ SS_FlagSize = 4
 SN_FlagSize = 4
 
 # for testing dropped packets
-drop_packets = []
+drop_packets = [0,1,2,3,4,5,6,7]
+#drop_packets = []
 
 def encodeImage():
     # Compress the image
@@ -66,12 +67,20 @@ while True:
     print("Check_point value" + str(check_point))
     packet_count = 0
 
+    #Sending Sync_Syn == 3
+    syncSyn_data = "5!" + SS
+    message = "3," + str(1) + ',' + str(1) + ',' + syncSyn_data
+
+    client_socket.sendto(message.encode(), (args.server_name,server_port))
+
+    #Waiting for Sync_Ack == 9
+    server_message,serverAddress = client_socket.recvfrom(2048)
+
     while(num_packet < len(encode_msgs)):		
-        # simulating packet loss
-        # not going to stay -------
         
         packet_count = packet_count + 1
-        print("Packet_count value " + str(packet_count))
+        print("Segment Number (starting at 0) " + str(num_packet))
+        # remove later --------
         if num_packet not in drop_packets:
         # remove later --------
             data = encode_msgs[num_packet]
@@ -89,41 +98,55 @@ while True:
 
             print("Sending Packet to Server")
             client_socket.sendto(packetInfo.encode() + data, (args.server_name,server_port))
-            #packet_count = packet_count + 1
             
-            # if sent 1/8 of SS
-            if (packet_count == check_point):		
-                print("Packet_count == check_point")
-                print("Printing Segment Num, Segment Size " + str(SN) + ", " + str(SS))    
-                # reset the packet count
-                packet_count = 0 
-               
-                # waiting to see if all packets have been recieved
+        # if sent 1/8 of SS
+        print("Packet_count: " + str(packet_count))
+        if (packet_count == check_point):		
+            print("Packet_count == check_point")
+            
+            # reset the packet count
+            packet_count = 0 
+                
+            # sending data syn == 10 to server
+            print("Sending Data Syn to Server")
+            dataSyn_msg = "10,1,1,void"
+            client_socket.sendto(dataSyn_msg.encode(), (args.server_name,server_port))
+            # waiting to see if all packets have been recieved
+            print("Waiting for server to send ACK message")
+            server_message,serverAddress = client_socket.recvfrom(2048)
+
+            packet_lost = int(server_message.decode())
+            print("Printing value of packet_lost " + str(packet_lost))
+
+            while (packet_lost != -1):
+                print("OH NO, WE LOST A PACKET!!!!")
+                print("Packet_Lost: " + str(packet_lost))
+                for num_msg in range(packet_lost,(num_packet+ 1)):
+                    print("Segment Num being sent: " + str(num_msg))
+                    data = encode_msgs[num_msg]
+                    SN = str(num_msg)
+                    if (len(SN) != SN_FlagSize):
+                        for l in range(0,(SN_FlagSize + len(SN))):
+                            SN = '0' + SN
+                    packetInfo = '5,' + SS + ',' + SN + ','
+                    print("Sending Packet to Server")
+                    client_socket.sendto(packetInfo.encode() + data, (args.server_name, server_port))
+                     
+                # sending data syn to server
+                print("Sending Data Syn to Server")
+                dataSyn_msg = "10,1,1,void"
+                client_socket.sendto(dataSyn_msg.encode(), (args.server_name,server_port))
+
                 print("Waiting for server to send ACK message")
                 server_message,serverAddress = client_socket.recvfrom(2048)
 
-                packet_lost = int(server_message.decode())
 
-                while (packet_lost != -1):
-                    for num_msg in range(packet_lost,SN):
-
-                        data = encode_msgs[num_msg]
-                        SN = str(num_msg)
-                        if (len(SN) != SN_FlagSize):
-                            for l in range(0,(SN_FlagSize + len(SN))):
-                                SN = '0' + SN
-                        packetInfo = '5,' + SS + ',' + SN + ','
-                        print("Sending Packet to Server")
-                        client_socket.sendto(packetInfo.encode() + data, (args.server_name, server_port))
-                    print("Waiting for server to send ACK message")
-                    server_message,serverAddress = client_socket.recvfrom(2048)
-
-                    packet_lost = int(server_message.decode())                
+                packet_lost = int(server_message.decode())                
                 
         num_packet = num_packet + 1
 
     print("sending done msg to server")
-    dataSyn_message = 'done'
+    dataSyn_message = "1,1,1,void"
 
     client_socket.sendto(dataSyn_message.encode(),(args.server_name,server_port))
 
