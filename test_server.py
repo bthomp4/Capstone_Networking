@@ -25,13 +25,19 @@ check_pt = 0
 # List for storing which packets have been received
 packetsRec = [0] * MSS
 
-CAM_FLAG = 5
-SYNC_SYN = 3
-SYNC_ACK = 9
-DATA_SYN = 10
-DATA_ACK = 11
-FULL_DATA_SYN = 1
-FULL_DATA_ACK = 2
+INIT_SYN      = 1
+INIT_SYNACK   = 2
+INIT_ACK      = 3
+FULL_DATA_SYN = 4
+FULL_DATA_ACK = 5 
+SYNC_SYN      = 6
+SYNC_ACK      = 7
+DATA_SYN      = 8
+DATA_ACK      = 9
+DATA_CAM      = 10
+DATA_SEN      = 11
+MODE_SYN      = 12
+MODE_ACK      = 13
 
 #Function Name: decode_string
 #Usage: Decodes the image from the client
@@ -123,22 +129,6 @@ while True:
         else:
             HasLost = True
 
-        #while (packet_dropped != -1):
-        #    print("Packet lost: " + str(packet_dropped)) 
-        #    message,clientAddress = serverSocket.recvfrom(2048)
-        #    splitPacket = message.split(b',')
-        #    MSG_Flag = int(splitPacket[0])
-        #    SegmentSize = int(splitPacket[1])
-        #    SegmentNum = int(splitPacket[2])
-        #    print("Segment Number: " + str(SegmentNum))
-        #    packetsRec[SegmentNum] = 1
-        #    if (SegmentNum == len(encode_string)):
-        #        encode_string.append(splitPacket[3])
-        #    else:
-        #        encode_string[SegmentNum] = splitPacket[3]
-
-        #    packet_dropped = check_point(SegmentSize)
-        #check_pt = check_pt + (SegmentSize//8)
     elif int(splitPacket[0].decode()) == CAM_FLAG:
 
         # Second element = SS
@@ -157,54 +147,5 @@ while True:
 
         print("Appending SegmentNum : " + str(SegmentNum))
 
-        #print("Segment Num: " + str(SegmentNum))
-
-        #if ((SegmentNum + 1) % (SegmentSize//8) == 0):
-            #print("reached check point")
-            #packet_dropped = -1
-            # loop through up to recent SN and see if there are any lost packets
-            #for i in range(check_pt,SegmentNum):
-                #if packetsRec[i] == 0:
-                    #packet_dropped = i
-                    #break
-            #print("Check_pt: " + str(check_pt))
-            #print("Segment Num " + str(SegmentNum))
-            #print("Value of packet_dropped " + str(packet_dropped))            
-            # if there is a lost packet, packet_dropped will != -1
-            #print("Sending packet_dropped message to client")
-            #packetDrop_message = str(packet_dropped)
-            #serverSocket.sendto(packetDrop_message.encode(),clientAddress) 
-
-            #while (packet_dropped != -1):
-                #print("while packet_dropped != -1")
-                #message,clientAddress = serverSocket.recvfrom(2048)
-                #splitPacket = message.split(b',')
-                #MSG_Flag = int(splitPacket[0])
-                #SegmentSize = int(splitPacket[1])
-                #SegmentNum = int(splitPacket[2])
-                #packetsRec[SegmentNum] = 1
-                #print("Segment Num being stored: " + str(SegmentNum) )
-                #print("Length of encode_string: " + str(len(encode_string)))
-                #if (SegmentNum == len(encode_string)):
-                #    encode_string.append(splitPacket[3])
-                #else:
-                #    encode_string[SegmentNum] = splitPacket[3] 
- 
-                #if ((SegmentNum + 1) % (SegmentSize//8) == 0):
-                    #print("Reached check point again")
-                    #packet_dropped = -1
-                    #for i in range(check_pt,SegmentNum):
-                    #    if packetsRec[i] == 0:
-                    #        packet_dropped = i
-                    #        break
-
-                    #packetDrop_message = str(packet_dropped)
-                    #serverSocket.sendto(packetDrop_message.encode(),clientAddress)
-            #check_pt = check_pt + (SegmentSize//8)
-
-        #readyMsg = 'ready'
-        
-        #print("sending ready to client")
-        #serverSocket.sendto(readyMsg.encode(), clientAddress)
     w.update()
     w.update_idletasks()
