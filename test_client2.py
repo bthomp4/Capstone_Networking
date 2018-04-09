@@ -183,6 +183,9 @@ DATA_SEN      = 11
 MODE_SYN      = 12
 MODE_ACK      = 13
 
+# check point divider value
+cp = 8
+
 # for testing dropped packets
 drop_packets = [0,1,2,3,4,5,6,7]
 #drop_packets = []
@@ -198,9 +201,9 @@ parser.add_argument('-s', dest='server_name', help='specifies the IP of the serv
 args = parser.parse_args()
 
 # sending a message to initialize connection
-message = str(INIT_SYN) + ',' + str(MSS_1) + ',' + VOID_DATA 
+message = str(INIT_SYN) + ',' + str(MSS_1) + ',' + str(SN_1) + ',' + VOID_DATA 
 
-client_socket.sendto(message.encode(),(args.server_name,server_port)
+client_socket.sendto(message.encode(),(args.server_name,server_port))
 
 while True:
 
@@ -209,9 +212,10 @@ while True:
     splitPacket = response.split(b',')
 
     if int(splitPacket[0].decode()) == INIT_SYNACK:
-        #send back an ACK
-        print("Sending back an ACK")
-    else if int(splitPacket[0].decode()) == SYNC_ACK:
+        # send back an INIT_ACK
+        message = str(INIT_ACK) + ',' + str(MSS_1) + ',' + str(SN_1) + ',' + VOID_DATA
+        client_socket.sendto(message.encode(),(args.server_name,server_port))
+    elif int(splitPacket[0].decode()) == SYNC_ACK:
 
         data = splitPacket[3].decode()
         splitData = data.split('!')
@@ -222,7 +226,7 @@ while True:
             packet_count = 0
             num_packet = 0
 
-            check_point = (int(SS)//8)
+            check_point = (int(SS)//cp)
             print("Check_point value" + str(check_point))
 
             while(num_packet < len(encode_msgs)):		
@@ -242,8 +246,8 @@ while True:
                         for l in range(0,(SN_FlagSize - len(SN))):
                             SN = '0' + SN
 
-                    # DATA_CAM Flag == 5
-                    packetInfo = '5,' + SS + ',' + SN + ',' 
+                    # Sending Camera Data
+                    packetInfo = str(DATA_CAM) + ',' + SS + ',' + SN + ',' 
 
                     print("Sending Packet to Server")
                     client_socket.sendto(packetInfo.encode() + data, (args.server_name,server_port))
@@ -256,15 +260,16 @@ while True:
                     # reset the packet count
                     packet_count = 0 
                 
-                    # sending data syn == 10 to server
+                    # sending Data_Syn to server
                     print("Sending Data Syn to Server")
-                    dataSyn_msg = "10,1,1,void"
-                    client_socket.sendto(dataSyn_msg.encode(), (args.server_name,server_port))
+                    message = str(DATA_SYN) + ',' + str(MSS_1) + ',' + str(SN_1) + ',' + VOID_DATA
+                    client_socket.sendto(message.encode(), (args.server_name,server_port))
                     # waiting to see if all packets have been recieved
                     print("Waiting for server to send ACK message")
-                    server_message,serverAddress = client_socket.recvfrom(2048)
+                    response,serverAddress = client_socket.recvfrom(2048)
+                    splitResponse = response.split(b',')
 
-                    packet_lost = int(server_message.decode())
+                    packet_lost = int(splitResponse[3].decode())
                     print("Printing value of packet_lost " + str(packet_lost))
 
                     while (packet_lost != -1):
@@ -277,28 +282,28 @@ while True:
                             if (len(SN) != SN_FlagSize):
                                 for l in range(0,(SN_FlagSize + len(SN))):
                                     SN = '0' + SN
-                            packetInfo = '5,' + SS + ',' + SN + ','
+                            message = str(DATA_CAM) + ',' + SS + ',' + SN + ','
                             print("Sending Packet to Server")
-                            client_socket.sendto(packetInfo.encode() + data, (args.server_name, server_port))
+                            client_socket.sendto(message.encode() + data, (args.server_name, server_port))
                      
                         # sending data syn to server
                         print("Sending Data Syn to Server")
-                        dataSyn_msg = "10,1,1,void"
-                        client_socket.sendto(dataSyn_msg.encode(), (args.server_name,server_port))
+                        message = str(DATA_SYN) + ',' + str(MSS_1) + ',' + str(SN_1) + ',' + VOID_DATA
+                        client_socket.sendto(message.encode(), (args.server_name,server_port))
 
                         print("Waiting for server to send ACK message")
-                        server_message,serverAddress = client_socket.recvfrom(2048)
+                        response,serverAddress = client_socket.recvfrom(2048)
+                        splitResponse = response.split(b',')
 
-
-                        packet_lost = int(server_message.decode())                
+                        packet_lost = int(splitResponse[3].decode())                
                 
                 num_packet = num_packet + 1
 
             print("sending done msg to server")
-            dataSyn_message = "1,1,1,void"
+            message = str(FULL_DATA_SYN) + ',' + str(MSS_1) + ',' + str(SN_1) + ',' + VOID_DATA
 
-            client_socket.sendto(dataSyn_message.encode(),(args.server_name,server_port))
-    else if int(splitPacket[0].decode()) == FULL_DATA_ACK:
+            client_socket.sendto(message.encode(),(args.server_name,server_port))
+    elif int(splitPacket[0].decode()) == FULL_DATA_ACK:
         if splitPacket[3].decode() == "VOID" or splitPacket[3].decode() == "SENSOR":
             string = encodeImage()
 
@@ -318,11 +323,11 @@ while True:
      
             #Sending SYNC_SYN message
             syncSyn_data = str(DATA_CAM) + '!' + SS
-            message = str(SYNC_SYN) + ',' + str(MSS_1) + ',' + str(MSS_1) + ',' + syncSyn_data
+            message = str(SYNC_SYN) + ',' + str(MSS_1) + ',' + str(SN_1) + ',' + syncSyn_data
 
             client_socket.sendto(message.encode(), (args.server_name,server_port))
 
-        else if splitPacket[3].decode() == "CAMERA":
+        elif splitPacket[3].decode() == "CAMERA":
             print("Sending Sensor data")
 
 client_socket.close()

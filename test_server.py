@@ -65,8 +65,12 @@ def check_point(SegmentSize):
         if packetsRec[i] == 0:
             packet_dropped = i
             break
-    packetDrop_msg = str(packet_dropped)
-    serverSocket.sendto(packetDrop_msg.encode(),clientAddress)
+    data = str(packet_dropped)
+
+    # Sending DATA_ACK
+    message = str(DATA_ACK) + ',' + str(MSS_1) + ',' + str(SN_1) + ',' + data
+
+    serverSocket.sendto(message.encode(),clientAddress)
     
     return packet_dropped
 
@@ -87,10 +91,16 @@ HasLost = False
 while True:
 
     # for testing dropped packets
-    message, clientAddress = serverSocket.recvfrom(2048)
-    splitPacket = message.split(b',')
+    response, clientAddress = serverSocket.recvfrom(2048)
+    splitPacket = response.split(b',')
 
-    if int(splitPacket[0].decode()) == FULL_DATA_SYN:
+    if int(splitPacket[0].decode()) == INIT_SYN:
+        # send back INIT_SYNACK
+    
+    elif int(splitPacket[0].decode()) == INIT_ACK:
+        # send back FULL_DATA_ACK, DATA = "VOID"
+
+    elif int(splitPacket[0].decode()) == FULL_DATA_SYN:
         print("Client done sending all packets for image")
         #reset values 
         check_pt = 0
@@ -114,8 +124,10 @@ while True:
         data_flag = int(splitData[0])
         SegmentSize = int(splitData[1]) 
 
-        dataAck_msg = str(DATA_ACK) + "," + str(1) + str(1) + "void"
-        serverSocket.sendto(dataAck_msg.encode(), clientAddress)
+        syncAck_data = splitData[0] + '!' + splitData[1]
+
+        message = str(SYNC_ACK) + "," + str(MSS_1) + str(SN_1) + ',' + syncAck_data
+        serverSocket.sendto(message.encode(), clientAddress)
 
     elif int(splitPacket[0].decode()) == DATA_SYN:
         #check for packet loss
