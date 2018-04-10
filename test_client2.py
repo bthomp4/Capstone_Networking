@@ -168,20 +168,10 @@ VOID_DATA   = "VOID"
 SS_FlagSize = 4
 SN_FlagSize = 4
 
-# Set Flag Values
-INIT_SYN      = 1
-INIT_SYNACK   = 2
-INIT_ACK      = 3
-FULL_DATA_SYN = 4
-FULL_DATA_ACK = 5
-SYNC_SYN      = 6
-SYNC_ACK      = 7
-DATA_SYN      = 8
-DATA_ACK      = 9
-DATA_CAM      = 10
-DATA_SEN      = 11
-MODE_SYN      = 12
-MODE_ACK      = 13
+# Dictionaries for Flag Values
+dictRec = {'0':'INIT_SYN','1':'INIT_SYNACK','2':'INIT_ACK','3':'FULL_DATA_SYN','4':'FULL_DATA_ACK','5':'SYNC_SYN','6':'SYNC_ACK','7':'DATA_SYN','8':'DATA_ACK','9':'DATA_CAM','A':'DATA_SEN','B':'MODE_SYN','C':'MODE_ACK'}
+
+dictSend = {'INIT_SYN':'0','INIT_SYNACK':'1','INIT_ACK':'2','FULL_DATA_SYN':'3','FULL_DATA_ACK':'4','SYNC_SYN':'5','SYNC_ACK':'6','DATA_SYN':'7','DATA_ACK':'8','DATA_CAM':'9','DATA_SEN':'A','MODE_SYN':'B','MODE_ACK':'C'}
 
 # check point divider value
 cp = 8
@@ -201,7 +191,7 @@ parser.add_argument('-s', dest='server_name', help='specifies the IP of the serv
 args = parser.parse_args()
 
 # sending a message to initialize connection
-message = str(INIT_SYN) + ',' + str(MSS_1) + ',' + str(SN_1) + ',' + VOID_DATA 
+message = dictSend['INIT_SYN'] + ',' + str(MSS_1) + ',' + str(SN_1) + ',' + VOID_DATA 
 
 client_socket.sendto(message.encode(),(args.server_name,server_port))
 
@@ -211,11 +201,11 @@ while True:
     response,serverAddress = client_socket.recvfrom(2048)
     splitPacket = response.split(b',')
 
-    if int(splitPacket[0].decode()) == INIT_SYNACK:
+    if dictRec[splitPacket[0].decode()] == 'INIT_SYNACK':
         # send back an INIT_ACK
-        message = str(INIT_ACK) + ',' + str(MSS_1) + ',' + str(SN_1) + ',' + VOID_DATA
+        message = dictSend['INIT_ACK'] + ',' + str(MSS_1) + ',' + str(SN_1) + ',' + VOID_DATA
         client_socket.sendto(message.encode(),(args.server_name,server_port))
-    elif int(splitPacket[0].decode()) == SYNC_ACK:
+    elif dictRec[splitPacket[0].decode()] == 'SYNC_ACK':
 
         data = splitPacket[3].decode()
         splitData = data.split('!')
@@ -247,7 +237,7 @@ while True:
                             SN = '0' + SN
 
                     # Sending Camera Data
-                    packetInfo = str(DATA_CAM) + ',' + SS + ',' + SN + ',' 
+                    packetInfo = dictSend['DATA_CAM'] + ',' + SS + ',' + SN + ',' 
 
                     print("Sending Packet to Server")
                     client_socket.sendto(packetInfo.encode() + data, (args.server_name,server_port))
@@ -262,14 +252,18 @@ while True:
                 
                     # sending Data_Syn to server
                     print("Sending Data Syn to Server")
-                    message = str(DATA_SYN) + ',' + str(MSS_1) + ',' + str(SN_1) + ',' + VOID_DATA
+                    message = dictSend['DATA_SYN'] + ',' + str(MSS_1) + ',' + str(SN_1) + ',' + "CAM"
                     client_socket.sendto(message.encode(), (args.server_name,server_port))
                     # waiting to see if all packets have been recieved
                     print("Waiting for server to send ACK message")
                     response,serverAddress = client_socket.recvfrom(2048)
                     splitResponse = response.split(b',')
 
-                    packet_lost = int(splitResponse[3].decode())
+                    # Split Data Section
+                    data = splitResponse[3].decode()
+                    splitData = data.split('!')
+                    packet_lost = int(splitData[1])
+
                     print("Printing value of packet_lost " + str(packet_lost))
 
                     while (packet_lost != -1):
@@ -282,28 +276,31 @@ while True:
                             if (len(SN) != SN_FlagSize):
                                 for l in range(0,(SN_FlagSize + len(SN))):
                                     SN = '0' + SN
-                            message = str(DATA_CAM) + ',' + SS + ',' + SN + ','
+                            message = dictSend['DATA_CAM'] + ',' + SS + ',' + SN + ','
                             print("Sending Packet to Server")
                             client_socket.sendto(message.encode() + data, (args.server_name, server_port))
                      
                         # sending data syn to server
                         print("Sending Data Syn to Server")
-                        message = str(DATA_SYN) + ',' + str(MSS_1) + ',' + str(SN_1) + ',' + VOID_DATA
+                        message = dictSend['DATA_SYN'] + ',' + str(MSS_1) + ',' + str(SN_1) + ',' + "CAM"
                         client_socket.sendto(message.encode(), (args.server_name,server_port))
 
                         print("Waiting for server to send ACK message")
                         response,serverAddress = client_socket.recvfrom(2048)
                         splitResponse = response.split(b',')
 
-                        packet_lost = int(splitResponse[3].decode())                
-                
+                        # Split Data Section
+                        data = splitResponse[3].decode()
+                        splitData = data.split('!')
+                        
+                        packet_lost = int(splitData[1])
                 num_packet = num_packet + 1
 
             print("sending done msg to server")
-            message = str(FULL_DATA_SYN) + ',' + str(MSS_1) + ',' + str(SN_1) + ',' + VOID_DATA
+            message = dictSend['FULL_DATA_SYN'] + ',' + str(MSS_1) + ',' + str(SN_1) + ',' + "CAM"
 
             client_socket.sendto(message.encode(),(args.server_name,server_port))
-    elif int(splitPacket[0].decode()) == FULL_DATA_ACK:
+    elif dictRec[splitPacket[0].decode()] == 'FULL_DATA_ACK':
         if splitPacket[3].decode() == "VOID" or splitPacket[3].decode() == "SENSOR":
             string = encodeImage()
 
@@ -322,8 +319,8 @@ while True:
                     SS = '0' + SS
      
             #Sending SYNC_SYN message
-            syncSyn_data = str(DATA_CAM) + '!' + SS
-            message = str(SYNC_SYN) + ',' + str(MSS_1) + ',' + str(SN_1) + ',' + syncSyn_data
+            syncSyn_data = dictSend['DATA_CAM'] + '!' + SS
+            message = dictSend['SYNC_SYN'] + ',' + str(MSS_1) + ',' + str(SN_1) + ',' + syncSyn_data
 
             client_socket.sendto(message.encode(), (args.server_name,server_port))
 
