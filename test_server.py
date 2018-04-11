@@ -7,8 +7,13 @@ import tkinter
 
 from time import sleep
 
-#Function Name: decode_string
-#Usage: Decodes the image from the client
+# ------------------
+# Defining Functions
+# ------------------
+
+# -----------------------------------------------
+# decode_string decodes the image from the client
+# -----------------------------------------------
 def decode_string(image_64_encode):
     global encode_string
     encode_string = []
@@ -17,12 +22,18 @@ def decode_string(image_64_encode):
         image_result.write(image_64_decode)
     update_image()
 
+# ----------------------------------------------
+# update_image: updates the image being displayed
+# ----------------------------------------------
 def update_image():
     global camImg
     camImg = ImageTk.PhotoImage(Image.open(picture))
     label.config(image = camImg)
     label.pack()
 
+# ---------------------------------------------------------------------------
+# check_point: sends to client a data_ack indicating if there was packet loss
+# ---------------------------------------------------------------------------
 def check_point(SegmentSize):
     global check_pt
     global packetsRec
@@ -33,10 +44,10 @@ def check_point(SegmentSize):
         if packetsRec[i] == 0:
             packet_dropped = i
             break
-    data = str(packet_dropped)
+    data = "CAM" + '!' + str(packet_dropped)
 
     # Sending DATA_ACK
-    message = str(DATA_ACK) + ',' + str(MSS_1) + ',' + str(SN_1) + ',' + data
+    message = dictSend['DATA_ACK'] + ',' + str(MSS_1) + ',' + str(SN_1) + ',' + data
 
     serverSocket.sendto(message.encode(),clientAddress)
     
@@ -119,16 +130,21 @@ while True:
 
             message = dictSend['FULL_DATA_ACK'] + ',' + str(MSS_1) + ',' + str(SN_1) + ',' + "CAM"
             serverSocket.sendto(message.encode(),clientAddress)
+        elif splitPacket[3].decode() == "SEN":
+            # For now, just send back a FULL_DATA_ACK
+            message = dictSend['FULL_DATA_ACK'] + ',' + str(MSS_1) + ',' + str(SN_1) + ',' + "SEN"
+            serverSocket.sendto(message.encode(),clientAddress)
+
     elif dictRec[splitPacket[0].decode()] == 'SYNC_SYN':
                 
         data = splitPacket[3].decode()
         splitData = data.split('!')
-        data_flag = int(splitData[0])
+        data_flag = splitData[0]
         SegmentSize = int(splitData[1]) 
 
-        syncAck_data = splitData[0] + '!' + splitData[1]
+        syncAck_data = data_flag + '!' + splitData[1]
 
-        message = str(SYNC_ACK) + "," + str(MSS_1) + str(SN_1) + ',' + syncAck_data
+        message = dictSend['SYNC_ACK'] + "," + str(MSS_1) + ',' + str(SN_1) + ',' + syncAck_data
         serverSocket.sendto(message.encode(), clientAddress)
 
     elif dictRec[splitPacket[0].decode()] == 'DATA_SYN':
@@ -136,11 +152,14 @@ while True:
         data = splitPacket[3].decode()
         splitData = data.split('!')
         data_type = splitData[0]
+        other_data = splitData[1]
 
         if data_type == "CAM": 
             #check for packet loss
             print("Checking for packet loss")
-            print("SegmentSize :" + str(SegmentSize))
+
+            SegmentSize = int(other_data)
+
             packet_dropped = check_point(SegmentSize)
        
             if (packet_dropped == -1):
@@ -149,9 +168,13 @@ while True:
             else:
                 HasLost = True
         elif data_type == "SEN":
-            print("Doing something with Sensor data")
+            print("Recieved Data_SYN for Sensor Data")
+            
+            # Just for testing purposes for now
+            message = dictSend['DATA_ACK'] + ',' + str(MSS_1) + ',' + str(SN_1) + ',' + "SEN!VOID"
+            serverSocket.sendto(message.encode(), clientAddress)
 
-    elif int(splitPacket[0].decode()) == CAM_FLAG:
+    elif dictRec[splitPacket[0].decode()] == 'DATA_CAM':
 
         # Second element = SS
         SegmentSize = int(splitPacket[1])
@@ -168,6 +191,10 @@ while True:
             encode_string[SegmentNum] = splitPacket[3]
 
         print("Appending SegmentNum : " + str(SegmentNum))
+    
+    elif dictRec[splitPacket[0].decode()] == 'DATA_SEN':
+        # handle the sensor data
+        print("Recieving sensor data")
 
     w.update()
     w.update_idletasks()

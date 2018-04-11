@@ -209,10 +209,10 @@ while True:
 
         data = splitPacket[3].decode()
         splitData = data.split('!')
-        data_flag = int(splitData[0])
+        data_flag = splitData[0]
         SS = splitData[1]  
 
-        if data_flag == DATA_CAM:
+        if data_type == "CAM":
             packet_count = 0
             num_packet = 0
 
@@ -252,7 +252,8 @@ while True:
                 
                     # sending Data_Syn to server
                     print("Sending Data Syn to Server")
-                    message = dictSend['DATA_SYN'] + ',' + str(MSS_1) + ',' + str(SN_1) + ',' + "CAM"
+                    msg_data = "CAM!" + SS
+                    message = dictSend['DATA_SYN'] + ',' + str(MSS_1) + ',' + str(SN_1) + ',' + msg_data
                     client_socket.sendto(message.encode(), (args.server_name,server_port))
                     # waiting to see if all packets have been recieved
                     print("Waiting for server to send ACK message")
@@ -282,7 +283,8 @@ while True:
                      
                         # sending data syn to server
                         print("Sending Data Syn to Server")
-                        message = dictSend['DATA_SYN'] + ',' + str(MSS_1) + ',' + str(SN_1) + ',' + "CAM"
+                        msg_data = "CAM!" + SS
+                        message = dictSend['DATA_SYN'] + ',' + str(MSS_1) + ',' + str(SN_1) + ',' + msg_data
                         client_socket.sendto(message.encode(), (args.server_name,server_port))
 
                         print("Waiting for server to send ACK message")
@@ -298,10 +300,26 @@ while True:
 
             print("sending done msg to server")
             message = dictSend['FULL_DATA_SYN'] + ',' + str(MSS_1) + ',' + str(SN_1) + ',' + "CAM"
-
             client_socket.sendto(message.encode(),(args.server_name,server_port))
+        elif data_type == "SEN":
+            # Send DATA_SEN message
+
+            # Just for testing purposes for now
+            message = dictSend['DATA_SEN'] + ',' + str(MSS_1) + ',' + str(SN_1) + ',' + "0!0"
+            client_socket.sendto(message.encode(), (args.server_name,server_port))     
+            # Send DATA_SYN
+            message = dictSend['DATA_SYN'] + ',' + str(MSS_1) + ',' + str(SN_1) + ',' + "SEN!VOID"
+            client_socket.sendto(message.encode(), (args.server_name,server_port))
+
+            # Wait for DATA_ACK from Server
+            response,serverAddress = client_socket.recvfrom(2048)
+
+            # Then send a FULL_DATA_SYN
+            message = dictSend['FULL_DATA_SYN'] + ',' + str(MSS_1) + ',' + str(SN_1) + ',' + "SEN"
+            client_socket.sendto(message.encode(), (args.server_name,server_port)) 
+ 
     elif dictRec[splitPacket[0].decode()] == 'FULL_DATA_ACK':
-        if splitPacket[3].decode() == "VOID" or splitPacket[3].decode() == "SENSOR":
+        if splitPacket[3].decode() == "VOID" or splitPacket[3].decode() == "SEN":
             string = encodeImage()
 
             encode_msgs = []
@@ -319,12 +337,17 @@ while True:
                     SS = '0' + SS
      
             #Sending SYNC_SYN message
-            syncSyn_data = dictSend['DATA_CAM'] + '!' + SS
+            syncSyn_data = "CAM" + '!' + SS
             message = dictSend['SYNC_SYN'] + ',' + str(MSS_1) + ',' + str(SN_1) + ',' + syncSyn_data
 
             client_socket.sendto(message.encode(), (args.server_name,server_port))
 
-        elif splitPacket[3].decode() == "CAMERA":
-            print("Sending Sensor data")
+        elif splitPacket[3].decode() == "CAM":
+            print("Sending Sensor SYNC_SYN Message")
+            # send SYNC_SYN for SENSOR   
+
+            # Just for testing purposes for now
+            message = dictSend['SYNC_SYN'] + ',' + str(MSS_1) + ',' + str(SN_1) + ',' + "SEN!0" 
+            client_socket.sendto(message.encode(), (args.server_name,server_port))
 
 client_socket.close()
