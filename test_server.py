@@ -68,7 +68,9 @@ picture = "test_decode.jpg"
 encode_string = []
 
 # Max Segment Size
-MSS = 9999
+MSS   = 9999
+MSS_1 = "0001"
+SN_1  = "0001"
 
 # where packets need to be checked for loss
 check_pt = 0
@@ -103,12 +105,12 @@ while True:
 
     if dictRec[splitPacket[0].decode()] == 'INIT_SYN':
         # send back INIT_SYNACK
-        message = dictSend['INIT_SYNACK'] + ',' + str(MSS_1) + ',' + str(SN_1) + ',' + VOID_DATA
+        message = dictSend['INIT_SYNACK'] + ',' + MSS_1 + ',' + SN_1 + ',' + VOID_DATA
         
         serverSocket.sendto(message.encode(),clientAddress) 
     elif dictRec[splitPacket[0].decode()] == 'INIT_ACK':
         # send back FULL_DATA_ACK, DATA = "VOID"
-        message = dictSend['FULL_DATA_ACK'] + ',' + str(MSS_1) + ',' + str(SN_1) + ',' + VOID_DATA
+        message = dictSend['FULL_DATA_ACK'] + ',' + MSS_1 + ',' + SN_1 + ',' + VOID_DATA
 
         serverSocket.sendto(message.encode(),clientAddress) 
     elif dictRec[splitPacket[0].decode()] == 'FULL_DATA_SYN':
@@ -128,11 +130,11 @@ while True:
         
             decode_string(full_string)
 
-            message = dictSend['FULL_DATA_ACK'] + ',' + str(MSS_1) + ',' + str(SN_1) + ',' + "CAM"
+            message = dictSend['FULL_DATA_ACK'] + ',' + MSS_1 + ',' + SN_1 + ',' + "CAM"
             serverSocket.sendto(message.encode(),clientAddress)
         elif splitPacket[3].decode() == "SEN":
             # For now, just send back a FULL_DATA_ACK
-            message = dictSend['FULL_DATA_ACK'] + ',' + str(MSS_1) + ',' + str(SN_1) + ',' + "SEN"
+            message = dictSend['FULL_DATA_ACK'] + ',' + MSS_1 + ',' + SN_1 + ',' + "SEN"
             serverSocket.sendto(message.encode(),clientAddress)
 
     elif dictRec[splitPacket[0].decode()] == 'SYNC_SYN':
@@ -144,7 +146,7 @@ while True:
 
         syncAck_data = data_flag + '!' + splitData[1]
 
-        message = dictSend['SYNC_ACK'] + "," + str(MSS_1) + ',' + str(SN_1) + ',' + syncAck_data
+        message = dictSend['SYNC_ACK'] + "," + MSS_1 + ',' + SN_1 + ',' + syncAck_data
         serverSocket.sendto(message.encode(), clientAddress)
 
     elif dictRec[splitPacket[0].decode()] == 'DATA_SYN':
@@ -171,7 +173,7 @@ while True:
             print("Recieved Data_SYN for Sensor Data")
             
             # Just for testing purposes for now
-            message = dictSend['DATA_ACK'] + ',' + str(MSS_1) + ',' + str(SN_1) + ',' + "SEN!VOID"
+            message = dictSend['DATA_ACK'] + ',' + MSS_1 + ',' + SN_1 + ',' + "SEN!VOID"
             serverSocket.sendto(message.encode(), clientAddress)
 
     elif dictRec[splitPacket[0].decode()] == 'DATA_CAM':

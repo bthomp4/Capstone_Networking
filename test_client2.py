@@ -1,8 +1,5 @@
 # This program is used for testing the client program without using the PiCamera
 
-# to bring in the print function from Python3
-#from __future__ import print_function
-
 from socket import *
 import argparse
 
@@ -16,7 +13,7 @@ from datetime import datetime
 from time import *
 
 # for GPIO Pins
-import RPi.GPIO as GPIO
+#import RPi.GPIO as GPIO
 
 # -------------------
 # Defining Functions
@@ -25,79 +22,79 @@ import RPi.GPIO as GPIO
 # --------------------------------------------------
 # measure1 takes a measurement from the first sensor
 # --------------------------------------------------
-def measure1():
+#def measure1():
     # This function measures a distance
-    GPIO.output(GPIO_TRIGGER1,True)
+    #GPIO.output(GPIO_TRIGGER1,True)
     # Wait 10us
-    sleep(0.00001)
-    GPIO.output(GPIO_TRIGGER1,False)
-    start = time()
+    #sleep(0.00001)
+    #GPIO.output(GPIO_TRIGGER1,False)
+    #start = time()
 
-    while GPIO.input(GPIO_ECHO1)==0:
-        start = time()
+    #while GPIO.input(GPIO_ECHO1)==0:
+    #    start = time()
 
-    while GPIO.input(GPIO_ECHO1)==1:
-        stop = time()
+    #while GPIO.input(GPIO_ECHO1)==1:
+    #    stop = time()
 
-    elapsed = stop-start
-    distance = (elasped * speedSound/2)
+    #elapsed = stop-start
+    #distance = (elasped * speedSound/2)
 
-    return distance
+    #return distance
 
 # ----------------------------------------------------
 # measure_average1 finds the average of 3 measurements
 # ----------------------------------------------------
-def measure_average1():
+#def measure_average1():
     # This function takes 3 measurements and 
     # returns the average.
 
-    distance1 = measure1()
-    sleep(0.1)
-    distance2 = measure1()
-    sleep(0.1)
-    distance3 = measure1()
-    distance = distance1 + distance2 + distance3
-    distance = distance/3
-    return distance
+    #distance1 = measure1()
+    #sleep(0.1)
+    #distance2 = measure1()
+    #sleep(0.1)
+    #distance3 = measure1()
+    #distance = distance1 + distance2 + distance3
+    #distance = distance/3
+    #return distance
 
 # ---------------------------------------------------
 # measure2 takes a measurement from the second sensor
 # ---------------------------------------------------
-def measure2():
+#def measure2():
     # This function measures a distance
-    GPIO.output(GPIO_TRIGGER2,True)
+    #GPIO.output(GPIO_TRIGGER2,True)
     # Wait 10us
-    sleep(0.00001)
-    GPIO.output(GPIO_TRIGGER2,False)
-    start = time()
+    #sleep(0.00001)
+    #GPIO.output(GPIO_TRIGGER2,False)
+    #start = time()
     
-    while GPIO.input(GPIO_ECHO2)==0:
-        start = time()
+    #while GPIO.input(GPIO_ECHO2)==0:
+    #    start = time()
 
-    while GPIO.input(GPIO_ECHO2)==1:
-        stop = time()
+    #while GPIO.input(GPIO_ECHO2)==1:
+    #    stop = time()
 
-    elapsed = stop-start
-    distance = (elapsed * speedSound)/2
+    #elapsed = stop-start
+    #distance = (elapsed * speedSound)/2
 
-    return distance
+    #return distance
 
 # ----------------------------------------------------
 # measure_average2 finds the average of 3 measurements
 # ----------------------------------------------------
-def measure_average2():
+#def measure_average2():
     # This function takes 3 measurements and 
     # returns the average.
 
-    distance1 = measure2()
-    sleep(0.1)
-    distance2 = measure2()
-    sleep(0.1)
-    distance3 = measure2()
-    distance = distance1 + distance2 + distance3
-    distance = distance/3
+    #distance1 = measure2()
+    #sleep(0.1)
+    #distance2 = measure2()
+    #sleep(0.1)
+    #distance3 = measure2()
+    #distance = distance1 + distance2 + distance3
+    #distance = distance/3
 
-    return distance
+    #return distance
 
 # -----------
 # encodeImage
@@ -120,14 +117,14 @@ def encodeImage():
 # UpdateSideSensors updates the sensor values and returns the values
 # ------------------------------------------------------------------
 
-def UpdateSideSensors():
-    GPIO.output(GPIO_TRIGGER1,False)
-    GPIO.output(GPIO_TRIGGER2,False)
+#def UpdateSideSensors():
+    #GPIO.output(GPIO_TRIGGER1,False)
+    #GPIO.output(GPIO_TRIGGER2,False)
 
-    distance1 = measure_average1()
-    distance2 = measure_average2()
+    #distance1 = measure_average1()
+    #distance2 = measure_average2()
 
-    return distance1, distance2
+    #return distance1, distance2
 
 # ---------------
 # Main Script
@@ -135,26 +132,26 @@ def UpdateSideSensors():
 
 # Use BCM GPIO references
 # instead of physical pin numbers
-GPIO.setmode(GPIO.BCM)
+#GPIO.setmode(GPIO.BCM)
 
 # Define GPIO to use on Pi
-GPIO_TRIGGER1 = 23
-GPIO_ECHO1    = 24
-GPIO_TRIGGER2 = 5
-GPIO_ECHO2    = 6
+#GPIO_TRIGGER1 = 23
+#GPIO_ECHO1    = 24
+#GPIO_TRIGGER2 = 5
+#GPIO_ECHO2    = 6
 
 # Speed of sound in in/s at temperature
-speedSound = 13500 # in/s
+#speedSound = 13500 # in/s
 
 # Set pins as output and input
-GPIO.setup(GPIO_TRIGGER1,GPIO.OUT) # Trigger 1
-GPIO.setup(GPIO_ECHO1,GPIO.IN)     # Echo 1
-GPIO.setup(GPIO_TRIGGER2,GPIO.OUT) # Trigger 2
-GPIO.setup(GPIO_ECHO2,GPIO.IN)     # ECHO 2
+#GPIO.setup(GPIO_TRIGGER1,GPIO.OUT) # Trigger 1
+#GPIO.setup(GPIO_ECHO1,GPIO.IN)     # Echo 1
+#GPIO.setup(GPIO_TRIGGER2,GPIO.OUT) # Trigger 2
+#GPIO.setup(GPIO_ECHO2,GPIO.IN)     # ECHO 2
 
 # Set trigger to False (Low)
-GPIO.output(GPIO_TRIGGER1, False)
-GPIO.output(GPIO_TRIGGER2, False)
+#GPIO.output(GPIO_TRIGGER1, False)
+#GPIO.output(GPIO_TRIGGER2, False)
 
 # Set file names
 picture = "tempPic.jpg"
@@ -162,8 +159,8 @@ scaledPic = "pic_scaled.jpg"
 
 # Set variables
 DATA_SIZE   = 500
-MSS_1	    = 0001
-SN_1        = 0001
+MSS_1       = "0001"
+SN_1        = "0001"
 VOID_DATA   = "VOID"
 SS_FlagSize = 4
 SN_FlagSize = 4
@@ -191,7 +188,7 @@ parser.add_argument('-s', dest='server_name', help='specifies the IP of the serv
 args = parser.parse_args()
 
 # sending a message to initialize connection
-message = dictSend['INIT_SYN'] + ',' + str(MSS_1) + ',' + str(SN_1) + ',' + VOID_DATA 
+message = dictSend['INIT_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + VOID_DATA 
 
 client_socket.sendto(message.encode(),(args.server_name,server_port))
 
@@ -203,13 +200,13 @@ while True:
 
     if dictRec[splitPacket[0].decode()] == 'INIT_SYNACK':
         # send back an INIT_ACK
-        message = dictSend['INIT_ACK'] + ',' + str(MSS_1) + ',' + str(SN_1) + ',' + VOID_DATA
+        message = dictSend['INIT_ACK'] + ',' + MSS_1 + ',' + SN_1 + ',' + VOID_DATA
         client_socket.sendto(message.encode(),(args.server_name,server_port))
     elif dictRec[splitPacket[0].decode()] == 'SYNC_ACK':
 
         data = splitPacket[3].decode()
         splitData = data.split('!')
-        data_flag = splitData[0]
+        data_type = splitData[0]
         SS = splitData[1]  
 
         if data_type == "CAM":
@@ -253,7 +250,7 @@ while True:
                     # sending Data_Syn to server
                     print("Sending Data Syn to Server")
                     msg_data = "CAM!" + SS
-                    message = dictSend['DATA_SYN'] + ',' + str(MSS_1) + ',' + str(SN_1) + ',' + msg_data
+                    message = dictSend['DATA_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + msg_data
                     client_socket.sendto(message.encode(), (args.server_name,server_port))
                     # waiting to see if all packets have been recieved
                     print("Waiting for server to send ACK message")
@@ -284,7 +281,7 @@ while True:
                         # sending data syn to server
                         print("Sending Data Syn to Server")
                         msg_data = "CAM!" + SS
-                        message = dictSend['DATA_SYN'] + ',' + str(MSS_1) + ',' + str(SN_1) + ',' + msg_data
+                        message = dictSend['DATA_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + msg_data
                         client_socket.sendto(message.encode(), (args.server_name,server_port))
 
                         print("Waiting for server to send ACK message")
@@ -299,23 +296,23 @@ while True:
                 num_packet = num_packet + 1
 
             print("sending done msg to server")
-            message = dictSend['FULL_DATA_SYN'] + ',' + str(MSS_1) + ',' + str(SN_1) + ',' + "CAM"
+            message = dictSend['FULL_DATA_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + "CAM"
             client_socket.sendto(message.encode(),(args.server_name,server_port))
         elif data_type == "SEN":
             # Send DATA_SEN message
 
             # Just for testing purposes for now
-            message = dictSend['DATA_SEN'] + ',' + str(MSS_1) + ',' + str(SN_1) + ',' + "0!0"
+            message = dictSend['DATA_SEN'] + ',' + MSS_1 + ',' + SN_1 + ',' + "0!0"
             client_socket.sendto(message.encode(), (args.server_name,server_port))     
             # Send DATA_SYN
-            message = dictSend['DATA_SYN'] + ',' + str(MSS_1) + ',' + str(SN_1) + ',' + "SEN!VOID"
+            message = dictSend['DATA_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + "SEN!VOID"
             client_socket.sendto(message.encode(), (args.server_name,server_port))
 
             # Wait for DATA_ACK from Server
             response,serverAddress = client_socket.recvfrom(2048)
 
             # Then send a FULL_DATA_SYN
-            message = dictSend['FULL_DATA_SYN'] + ',' + str(MSS_1) + ',' + str(SN_1) + ',' + "SEN"
+            message = dictSend['FULL_DATA_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + "SEN"
             client_socket.sendto(message.encode(), (args.server_name,server_port)) 
  
     elif dictRec[splitPacket[0].decode()] == 'FULL_DATA_ACK':
@@ -337,8 +334,8 @@ while True:
                     SS = '0' + SS
      
             #Sending SYNC_SYN message
-            syncSyn_data = "CAM" + '!' + SS
-            message = dictSend['SYNC_SYN'] + ',' + str(MSS_1) + ',' + str(SN_1) + ',' + syncSyn_data
+            msg_data = "CAM" + '!' + SS
+            message = dictSend['SYNC_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + msg_data
 
             client_socket.sendto(message.encode(), (args.server_name,server_port))
 
@@ -347,7 +344,7 @@ while True:
             # send SYNC_SYN for SENSOR   
 
             # Just for testing purposes for now
-            message = dictSend['SYNC_SYN'] + ',' + str(MSS_1) + ',' + str(SN_1) + ',' + "SEN!0" 
+            message = dictSend['SYNC_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + "SEN!0" 
             client_socket.sendto(message.encode(), (args.server_name,server_port))
 
 client_socket.close()
