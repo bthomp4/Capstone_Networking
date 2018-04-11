@@ -158,11 +158,6 @@ while True:
         serverSocket.sendto(message.encode(),clientAddress) 
     elif dictRec[splitPacket[0].decode()] == 'FULL_DATA_SYN':
         
-        #data = splitPacket[3].decode()
-        #splitData = data.split('!')
-        #sys_mode = splitData[0]
-        #data_type = splitData[1]
-
         sys_mode,data_type = splitData(splitPacket[3])
 
         if data_type == "CAM":
@@ -194,11 +189,6 @@ while True:
 
     elif dictRec[splitPacket[0].decode()] == 'SYNC_SYN':
                 
-        #data = splitPacket[3].decode()
-        #splitData = data.split('!')
-        #data_flag = splitData[0]
-        #SegmentSize = int(splitData[1]) 
-
         data_type,SS = splitData(splitPacket[3])
         SegmentSize = int(SS)
 
@@ -209,11 +199,6 @@ while True:
 
     elif dictRec[splitPacket[0].decode()] == 'DATA_SYN':
         
-        #data = splitPacket[3].decode()
-        #splitData = data.split('!')
-        #data_type = splitData[0]
-        #other_data = splitData[1]
-
         data_type,other_data = splitData(splitPacket[3])
 
         if data_type == "CAM": 
@@ -258,9 +243,6 @@ while True:
         # handle the sensor data
         print("Recieving sensor data")
     
-        #data = splitPacket[3].decode()
-        #splitData = data.split('!')
-
         LeftSensor,RightSensor = splitData(splitPacket[3])
         
         # Left Sensor Data
