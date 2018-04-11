@@ -12,7 +12,7 @@ from datetime import datetime
 
 from time import *
 
-# for GPIO Pins
+# for GPIO Pins (can only be tested on RPi)
 #import RPi.GPIO as GPIO
 
 # -------------------
@@ -117,14 +117,21 @@ def encodeImage():
 # UpdateSideSensors updates the sensor values and returns the values
 # ------------------------------------------------------------------
 
-#def UpdateSideSensors():
+def UpdateSideSensors():
+
+    # Set trigger to False (Low)
     #GPIO.output(GPIO_TRIGGER1,False)
     #GPIO.output(GPIO_TRIGGER2,False)
 
+    #sleep(0.5)
     #distance1 = measure_average1()
     #distance2 = measure_average2()
 
-    #return distance1, distance2
+    # just for testing purposes for now
+    distance1 = 100
+    distance2 = 150
+
+    return distance1, distance2
 
 # ---------------
 # Main Script
@@ -141,7 +148,7 @@ def encodeImage():
 #GPIO_ECHO2    = 6
 
 # Speed of sound in in/s at temperature
-#speedSound = 13500 # in/s
+speedSound = 13500 # in/s
 
 # Set pins as output and input
 #GPIO.setup(GPIO_TRIGGER1,GPIO.OUT) # Trigger 1
@@ -300,9 +307,12 @@ while True:
             client_socket.sendto(message.encode(),(args.server_name,server_port))
         elif data_type == "SEN":
             # Send DATA_SEN message
+            LS, RS = UpdateSideSensors()
+
+            msg_data = str(LS) + '!' + str(RS)
 
             # Just for testing purposes for now
-            message = dictSend['DATA_SEN'] + ',' + MSS_1 + ',' + SN_1 + ',' + "0!0"
+            message = dictSend['DATA_SEN'] + ',' + MSS_1 + ',' + SN_1 + ',' + msg_data
             client_socket.sendto(message.encode(), (args.server_name,server_port))     
             # Send DATA_SYN
             message = dictSend['DATA_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + "SEN!VOID"
@@ -344,7 +354,7 @@ while True:
             # send SYNC_SYN for SENSOR   
 
             # Just for testing purposes for now
-            message = dictSend['SYNC_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + "SEN!0" 
+            message = dictSend['SYNC_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + "SEN!1" 
             client_socket.sendto(message.encode(), (args.server_name,server_port))
 
 client_socket.close()

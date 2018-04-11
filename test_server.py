@@ -5,7 +5,9 @@ import base64
 from PIL import Image,ImageTk
 import tkinter
 
-from time import sleep
+from time import *
+
+#import RPi.GPIO as GPIO
 
 # ------------------
 # Defining Functions
@@ -61,7 +63,7 @@ def check_point(SegmentSize):
 HasLost = False
 VOID_DATA = "VOID"
 
-# starts out blank in beginning of program
+# Default Picture is our Logo
 picture = "test_decode.jpg"
 
 # array to hold encoded string from client
@@ -82,6 +84,24 @@ packetsRec = [0] * MSS
 dictRec = {'0':'INIT_SYN','1':'INIT_SYNACK','2':'INIT_ACK','3':'FULL_DATA_SYN','4':'FULL_DATA_ACK','5':'SYNC_SYN','6':'SYNC_ACK','7':'DATA_SYN','8':'DATA_ACK','9':'DATA_CAM','A':'DATA_SEN','B':'MODE_SYN','C':'MODE_ACK'}
 
 dictSend = {'INIT_SYN':'0','INIT_SYNACK':'1','INIT_ACK':'2','FULL_DATA_SYN':'3','FULL_DATA_ACK':'4','SYNC_SYN':'5','SYNC_ACK':'6','DATA_SYN':'7','DATA_ACK':'8','DATA_CAM':'9','DATA_SEN':'A','MODE_SYN':'B','MODE_ACK':'C'}
+
+# GPIO pins and their purpose
+#GPIO_TRIGGER    = 23
+#GPIO_ECHO       = 20
+#GPIO_LEDSRIGHT  = 21
+#GPIO_LEDSLEFT   = 27
+
+# not needed yet, only testing side sensors
+#GPIO_FRONTLED1  = 2
+#GPIO_FRONTLED2  = 3
+#GPIO_FRONTLED3  = 4
+#GPIO_FRONTLED4  = 17
+#GPIO_FRONTLED5  = 27
+#GPIO_FRONTLED6  = 22
+#GPIO_FRONTLED7  = 10
+#GPIO_FRONTLED8  = 9
+#GPIO_FRONTLED9  = 11
+#GPIO_FRONTLED10 = 0
 
 # Setting up socket
 serverPort = 12000
@@ -197,6 +217,28 @@ while True:
     elif dictRec[splitPacket[0].decode()] == 'DATA_SEN':
         # handle the sensor data
         print("Recieving sensor data")
+    
+        data = splitPacket[3].decode()
+        splitData = data.split('!')
+        
+        # Left Sensor Data
+        LS = int(splitData[0])
+        
+        # Right Sensor Data
+        RS = int(splitData[1])
+
+        if RS <= 120: 
+            #GPIO.output(GPIO_LEDSRIGHT,True)
+            print("Turn Right LEDS ON")
+        else:
+            #GPIO.output(GPIO_LEDSRIGHT,False)
+            print("Turn Right LEDS OFF")
+        if LS <= 120:
+            #GPIO.output(GPIO_LEDSLEFT,True)
+            print("Turn LEFT LEDS ON")
+        else:
+            #GPIO.output(GPIO_LEDSLEFT,False)
+            print("Turn LEFT LEDS OFF")
 
     w.update()
     w.update_idletasks()
