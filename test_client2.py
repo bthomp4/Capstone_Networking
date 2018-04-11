@@ -187,6 +187,9 @@ drop_packets = [0,1,2,3,4,5,6,7]
 # initialize encode_msgs list
 encode_msgs = []
 
+# for the mode of the system, FB or BS
+sys_mode = " "
+
 server_port = 12000
 client_socket = socket(AF_INET,SOCK_DGRAM)
 
@@ -208,6 +211,11 @@ while True:
     if dictRec[splitPacket[0].decode()] == 'INIT_SYNACK':
         # send back an INIT_ACK
         message = dictSend['INIT_ACK'] + ',' + MSS_1 + ',' + SN_1 + ',' + VOID_DATA
+        client_socket.sendto(message.encode(),(args.server_name,server_port))
+    elif dictRec[splitPacket[0].decode()] == 'MODE_SYN':
+        # Send back MODE_ACK
+        sys_mode = splitPacket[3].decode()
+        message = dictSend['MODE_ACK'] + ',' + MSS_1 + ',' + SN_1 + ',' + sys_mode 
         client_socket.sendto(message.encode(),(args.server_name,server_port))
     elif dictRec[splitPacket[0].decode()] == 'SYNC_ACK':
 
@@ -303,7 +311,8 @@ while True:
                 num_packet = num_packet + 1
 
             print("sending done msg to server")
-            message = dictSend['FULL_DATA_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + "CAM"
+            msg_data = sys_mode + '!' + "CAM"
+            message = dictSend['FULL_DATA_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + msg_data
             client_socket.sendto(message.encode(),(args.server_name,server_port))
         elif data_type == "SEN":
             # Send DATA_SEN message
@@ -322,39 +331,51 @@ while True:
             response,serverAddress = client_socket.recvfrom(2048)
 
             # Then send a FULL_DATA_SYN
-            message = dictSend['FULL_DATA_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + "SEN"
+            msg_data = sys_mode + '!' + "SEN"
+            message = dictSend['FULL_DATA_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + msg_data
             client_socket.sendto(message.encode(), (args.server_name,server_port)) 
  
     elif dictRec[splitPacket[0].decode()] == 'FULL_DATA_ACK':
-        if splitPacket[3].decode() == "VOID" or splitPacket[3].decode() == "SEN":
-            string = encodeImage()
+        
+        data = splitPacket[3].decode()
+        splitData = data.split('!')
+        sys_mode = splitData[0]
+        data_type = splitData[1]
+   
+        if sys_mode == "FB":
+            # Sending both camera and sensor data
 
-            encode_msgs = []
+            if data_type == "VOID" or data_type == "SEN":
+                string = encodeImage()
 
-            while string:
-                encode_msgs.append(string[:DATA_SIZE])
-                string = string[DATA_SIZE:]
+                encode_msgs = []
 
-            # segment size
-            SS = str(len(encode_msgs))
+                while string:
+                    encode_msgs.append(string[:DATA_SIZE])
+                    string = string[DATA_SIZE:]
+
+                # segment size
+                SS = str(len(encode_msgs))
     
-            # pad segment size to be 4 bytes
-            if (len(SS) != SS_FlagSize):
-                for i in range(0,(SS_FlagSize - len(SS))):
-                    SS = '0' + SS
+                # pad segment size to be 4 bytes
+                if (len(SS) != SS_FlagSize):
+                    for i in range(0,(SS_FlagSize - len(SS))):
+                        SS = '0' + SS
      
-            #Sending SYNC_SYN message
-            msg_data = "CAM" + '!' + SS
-            message = dictSend['SYNC_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + msg_data
+                #Sending SYNC_SYN message
+                msg_data = "CAM" + '!' + SS
+                message = dictSend['SYNC_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + msg_data
 
-            client_socket.sendto(message.encode(), (args.server_name,server_port))
+                client_socket.sendto(message.encode(), (args.server_name,server_port))
 
-        elif splitPacket[3].decode() == "CAM":
-            print("Sending Sensor SYNC_SYN Message")
-            # send SYNC_SYN for SENSOR   
+            elif data_type == "CAM":
+                print("Sending Sensor SYNC_SYN Message")
+                # send SYNC_SYN for SENSOR   
 
-            # Just for testing purposes for now
-            message = dictSend['SYNC_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + "SEN!1" 
-            client_socket.sendto(message.encode(), (args.server_name,server_port))
-
+                # Just for testing purposes for now
+                message = dictSend['SYNC_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + "SEN!1" 
+                client_socket.sendto(message.encode(), (args.server_name,server_port))
+        elif sys_mode == "BS":
+            # Only sending sensor data since display is turned off
+            message = dictSend['SYNC_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + "SEN!1"
 client_socket.close()

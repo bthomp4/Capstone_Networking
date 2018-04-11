@@ -116,6 +116,8 @@ camImg = ImageTk.PhotoImage(im)
 label = tkinter.Label(w,image=camImg)
 label.pack()
 
+sys_mode = " "
+
 # begin loop
 while True:
 
@@ -129,12 +131,28 @@ while True:
         
         serverSocket.sendto(message.encode(),clientAddress) 
     elif dictRec[splitPacket[0].decode()] == 'INIT_ACK':
-        # send back FULL_DATA_ACK, DATA = "VOID"
-        message = dictSend['FULL_DATA_ACK'] + ',' + MSS_1 + ',' + SN_1 + ',' + VOID_DATA
+        # Send back MODE_SYN
+        # For testing purposes, just do Full Battery for now
+        sys_mode = "FB"
+        message = dictSend['MODE_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + sys_mode
+        serverSocket.sendto(message.encode(),clientAddress)        
+
+        # Wait for MODE_ACK, DATA = "MODE"
+        response, clientAddress = serverSocket.recvfrom(2048)
+
+        # send back FULL_DATA_ACK, DATA = "MODE!VOID"
+        msg_data = sys_mode + '!' + VOID_DATA
+        message = dictSend['FULL_DATA_ACK'] + ',' + MSS_1 + ',' + SN_1 + ',' + msg_data 
 
         serverSocket.sendto(message.encode(),clientAddress) 
     elif dictRec[splitPacket[0].decode()] == 'FULL_DATA_SYN':
-        if splitPacket[3].decode() == "CAM":
+        
+        data = splitPacket[3].decode()
+        splitData = data.split('!')
+        sys_mode = splitData[0]
+        data_type = splitData[1]
+
+        if data_type == "CAM":
             print("Client done sending all packets for image")
             
             #reset values 
@@ -150,11 +168,15 @@ while True:
         
             decode_string(full_string)
 
-            message = dictSend['FULL_DATA_ACK'] + ',' + MSS_1 + ',' + SN_1 + ',' + "CAM"
+            msg_data = sys_mode + '!' + "CAM"
+
+            message = dictSend['FULL_DATA_ACK'] + ',' + MSS_1 + ',' + SN_1 + ',' + msg_data
             serverSocket.sendto(message.encode(),clientAddress)
-        elif splitPacket[3].decode() == "SEN":
+        elif data_type == "SEN":
             # For now, just send back a FULL_DATA_ACK
-            message = dictSend['FULL_DATA_ACK'] + ',' + MSS_1 + ',' + SN_1 + ',' + "SEN"
+            msg_data = sys_mode + '!' + "SEN"
+
+            message = dictSend['FULL_DATA_ACK'] + ',' + MSS_1 + ',' + SN_1 + ',' + msg_data
             serverSocket.sendto(message.encode(),clientAddress)
 
     elif dictRec[splitPacket[0].decode()] == 'SYNC_SYN':
