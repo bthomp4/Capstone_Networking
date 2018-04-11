@@ -55,6 +55,17 @@ def check_point(SegmentSize):
     
     return packet_dropped
 
+# --------------------------------------------
+# splitData is used to split data based on '!'
+# --------------------------------------------
+def splitData(data):
+    data_decoded = data.decode()
+    newData = data_decoded.split('!')
+    data1 = newData[0]
+    data2 = newData[1]
+    
+    return data1, data2
+
 # ---------------
 # Main Script
 # ---------------
@@ -147,10 +158,12 @@ while True:
         serverSocket.sendto(message.encode(),clientAddress) 
     elif dictRec[splitPacket[0].decode()] == 'FULL_DATA_SYN':
         
-        data = splitPacket[3].decode()
-        splitData = data.split('!')
-        sys_mode = splitData[0]
-        data_type = splitData[1]
+        #data = splitPacket[3].decode()
+        #splitData = data.split('!')
+        #sys_mode = splitData[0]
+        #data_type = splitData[1]
+
+        sys_mode,data_type = splitData(splitPacket[3])
 
         if data_type == "CAM":
             print("Client done sending all packets for image")
@@ -181,22 +194,27 @@ while True:
 
     elif dictRec[splitPacket[0].decode()] == 'SYNC_SYN':
                 
-        data = splitPacket[3].decode()
-        splitData = data.split('!')
-        data_flag = splitData[0]
-        SegmentSize = int(splitData[1]) 
+        #data = splitPacket[3].decode()
+        #splitData = data.split('!')
+        #data_flag = splitData[0]
+        #SegmentSize = int(splitData[1]) 
 
-        syncAck_data = data_flag + '!' + splitData[1]
+        data_type,SS = splitData(splitPacket[3])
+        SegmentSize = int(SS)
 
-        message = dictSend['SYNC_ACK'] + "," + MSS_1 + ',' + SN_1 + ',' + syncAck_data
+        msg_data = data_type + '!' + SS
+
+        message = dictSend['SYNC_ACK'] + "," + MSS_1 + ',' + SN_1 + ',' + msg_data
         serverSocket.sendto(message.encode(), clientAddress)
 
     elif dictRec[splitPacket[0].decode()] == 'DATA_SYN':
         
-        data = splitPacket[3].decode()
-        splitData = data.split('!')
-        data_type = splitData[0]
-        other_data = splitData[1]
+        #data = splitPacket[3].decode()
+        #splitData = data.split('!')
+        #data_type = splitData[0]
+        #other_data = splitData[1]
+
+        data_type,other_data = splitData(splitPacket[3])
 
         if data_type == "CAM": 
             #check for packet loss
@@ -240,14 +258,16 @@ while True:
         # handle the sensor data
         print("Recieving sensor data")
     
-        data = splitPacket[3].decode()
-        splitData = data.split('!')
+        #data = splitPacket[3].decode()
+        #splitData = data.split('!')
+
+        LeftSensor,RightSensor = splitData(splitPacket[3])
         
         # Left Sensor Data
-        LS = int(splitData[0])
+        LS = int(LeftSensor)
         
         # Right Sensor Data
-        RS = int(splitData[1])
+        RS = int(RightSensor)
 
         if RS <= 120: 
             #GPIO.output(GPIO_LEDSRIGHT,True)
