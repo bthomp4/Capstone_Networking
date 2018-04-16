@@ -7,28 +7,26 @@ The goal of this project is to connect two Raspberry Pi Zero Ws together using a
 ~1. Create an ad hoc Network using one of the Raspberry Pi Zero Ws~
    - ~This may be done using the command line or programming / scripting language~
     - ~If done using the command line create a txt file that contains the commands used~
-2. Connect the second Raspberry Pi Zero W to the created ad hoc network
-   - This may be done using the command line or programming / scripting language
-    - If done using the command line create a txt file that contains the commands used
-3. Use the created link to pass messages between the two Raspberry Pis
-   - The messages should be sent using UDP packets 
-   - This may be done using command line or programming /scripting language
-4. If not previously done, complete 1-3 with a programming / scripting language
-5. Use the connected ad hoc network to send an image taken with the camera on one pi to the display connected to the second pi
-6. Use the connected ad hoc network to send sensor information from the ultrasonic sensors connected to one pi, to the display of the second pi
-7. Join this program with into one with the other programs
+~2. Connect the second Raspberry Pi Zero W to the created ad hoc network~
+   - ~This may be done using the command line or programming / scripting language~
+    - ~If done using the command line create a txt file that contains the commands used~
+~3. Use the created link to pass messages between the two Raspberry Pis~
+   - ~The messages should be sent using UDP packets~
+   - ~This may be done using command line or programming /scripting language~
+~4. If not previously done, complete 1-3 with a programming / scripting language~
+~5. Use the connected ad hoc network to send an image taken with the camera on one pi to the display connected to the second pi~
+~6. Use the connected ad hoc network to send sensor information from the ultrasonic sensors connected to one pi, to the display of the second pi~
+~7. Join this program with into one with the other programs~
 
-## Tasks that need to be added in somewhere:
-1. ~Figure out how to change Image to a string, and then from string back to Image~
-2. Create a socket program to send image from server to client
+## Additional Tasks:
+~1. Figure out how to change Image to a string, and then from string back to Image~
+~2. Create a socket program to send image from server to client~
 
    ~2.1 Figure out how to compress an image using python~
    
       ~2.1.1 Try compressing the image after taking the picture~
-      
-    2.2 Optional: Sync the Client's time with the Server's time.
     
-3. Create bash scripts at some point
+3. Create bash scripts for running the socket program on server and client side
 
 ## Additional Info
 ### Setting up Ad Hoc Network for Raspberry Pi
