@@ -7,6 +7,9 @@ import argparse
 import base64
 from PIL import Image
 
+import signal
+import sys
+
 from time import *
 
 # for GPIO Pins (can only be tested on RPi)
@@ -179,11 +182,12 @@ SN_1        = "0001"
 VOID_DATA   = "VOID"
 SS_FlagSize = 4
 SN_FlagSize = 4
+DCNT_flag   = 0
 
 # Dictionaries for Flag Values
-dictRec = {'0':'INIT_SYN','1':'INIT_SYNACK','2':'INIT_ACK','3':'FULL_DATA_SYN','4':'FULL_DATA_ACK','5':'SYNC_SYN','6':'SYNC_ACK','7':'DATA_SYN','8':'DATA_ACK','9':'DATA_CAM','A':'DATA_SEN','B':'MODE_SYN','C':'MODE_ACK'}
+dictRec = {'0':'INIT_SYN','1':'INIT_SYNACK','2':'INIT_ACK','3':'FULL_DATA_SYN','4':'FULL_DATA_ACK','5':'SYNC_SYN','6':'SYNC_ACK','7':'DATA_SYN','8':'DATA_ACK','9':'DATA_CAM','A':'DATA_SEN','B':'MODE_SYN','C':'MODE_ACK','D':'DCNT'}
 
-dictSend = {'INIT_SYN':'0','INIT_SYNACK':'1','INIT_ACK':'2','FULL_DATA_SYN':'3','FULL_DATA_ACK':'4','SYNC_SYN':'5','SYNC_ACK':'6','DATA_SYN':'7','DATA_ACK':'8','DATA_CAM':'9','DATA_SEN':'A','MODE_SYN':'B','MODE_ACK':'C'}
+dictSend = {'INIT_SYN':'0','INIT_SYNACK':'1','INIT_ACK':'2','FULL_DATA_SYN':'3','FULL_DATA_ACK':'4','SYNC_SYN':'5','SYNC_ACK':'6','DATA_SYN':'7','DATA_ACK':'8','DATA_CAM':'9','DATA_SEN':'A','MODE_SYN':'B','MODE_ACK':'C','DCNT':'D'}
 
 # check point divider value
 cp = 8
@@ -205,12 +209,24 @@ parser = argparse.ArgumentParser(description='sending images')
 parser.add_argument('-s', dest='server_name', help='specifies the IP of the server, this is required', required=True)
 args = parser.parse_args()
 
+# For handling a disconnect signal
+def signal_handler(signal,frame):
+    message = dictSend['DCNT'] + ',' + MSS_1 + ',' + SN_1 + ',' + VOID_DATA
+    client_socket.sendto(message.encode(),(args.server_name,server_port))
+
+    #GPIO.cleanup()
+    
+    client_socket.close()
+    sys.exit(0)
+
+signal.signal(signal.SIGINT, signal_handler)
+
 # sending a message to initialize connection
 message = dictSend['INIT_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + VOID_DATA 
 
 client_socket.sendto(message.encode(),(args.server_name,server_port))
 
-while True:
+while not DCNT_flag:
 
     # recieving message from server
     response,serverAddress = client_socket.recvfrom(2048)
@@ -377,4 +393,7 @@ while True:
         elif sys_mode == "BS":
             # Only sending sensor data since display is turned off
             message = dictSend['SYNC_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + "SEN!1"
+    elif dictRec[splitPacket[0].decode()] == 'DCNT':
+        # Set disconnect flag to 1
+        DCNT_flag = 1
 client_socket.close()
