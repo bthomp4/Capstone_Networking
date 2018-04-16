@@ -206,19 +206,6 @@ parser = argparse.ArgumentParser(description='sending images')
 parser.add_argument('-s', dest='server_name', help='specifies the IP of the server, this is required', required=True)
 args = parser.parse_args()
 
-#disconnect_str = 'DCNT'
-#ssd_str = 'SSD'
-#rcd_str = 'RCD'
-
-#def signal_handler(signal,frame):
-#	print('Ctrl+C pressed')
-#	message = disconnect_str
-#	client_socket.sendto(message.encode(),(args.server_name,serverPort))
-#	client_socket.close()
-#	sys.exit(0)
-
-#signal.signal(signal.SIGINT,signal_handler)
-
 # sending a message to initialize connection
 message = dictSend['INIT_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + VOID_DATA
 
