@@ -217,7 +217,6 @@ while True:
         elif data_type == "SEN":
             print("Recieved Data_SYN for Sensor Data")
             
-            # Just for testing purposes for now
             message = dictSend['DATA_ACK'] + ',' + MSS_1 + ',' + SN_1 + ',' + "SEN!VOID"
             serverSocket.sendto(message.encode(), clientAddress)
 
