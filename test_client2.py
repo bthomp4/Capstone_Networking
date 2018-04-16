@@ -133,6 +133,17 @@ def UpdateSideSensors():
 
     return distance1, distance2
 
+# --------------------------------------------
+# splitData is used to split data based on '!'
+# --------------------------------------------
+def splitData(data):
+    data_decoded = data.decode()
+    newData = data_decoded.split('!')
+    data1 = newData[0]
+    data2 = newData[1]
+
+    return data1, data2
+
 # ---------------
 # Main Script
 # ---------------
@@ -219,10 +230,7 @@ while True:
         client_socket.sendto(message.encode(),(args.server_name,server_port))
     elif dictRec[splitPacket[0].decode()] == 'SYNC_ACK':
 
-        data = splitPacket[3].decode()
-        splitData = data.split('!')
-        data_type = splitData[0]
-        SS = splitData[1]  
+        data_type,SS = splitData(splitPacket[3])  
 
         if data_type == "CAM":
             packet_count = 0
@@ -272,10 +280,9 @@ while True:
                     response,serverAddress = client_socket.recvfrom(2048)
                     splitResponse = response.split(b',')
 
-                    # Split Data Section
-                    data = splitResponse[3].decode()
-                    splitData = data.split('!')
-                    packet_lost = int(splitData[1])
+                    data_type,other = splitData(splitResponse[3])
+
+                    packet_lost = int(other)
 
                     print("Printing value of packet_lost " + str(packet_lost))
 
@@ -303,11 +310,9 @@ while True:
                         response,serverAddress = client_socket.recvfrom(2048)
                         splitResponse = response.split(b',')
 
-                        # Split Data Section
-                        data = splitResponse[3].decode()
-                        splitData = data.split('!')
+                        data_type,other = splitData(splitResponse[3])
                         
-                        packet_lost = int(splitData[1])
+                        packet_lost = int(other)
                 num_packet = num_packet + 1
 
             print("sending done msg to server")
@@ -336,12 +341,9 @@ while True:
             client_socket.sendto(message.encode(), (args.server_name,server_port)) 
  
     elif dictRec[splitPacket[0].decode()] == 'FULL_DATA_ACK':
-        
-        data = splitPacket[3].decode()
-        splitData = data.split('!')
-        sys_mode = splitData[0]
-        data_type = splitData[1]
    
+        sys_mode,data_type = splitData(splitPacket[3])
+
         if sys_mode == "FB":
             # Sending both camera and sensor data
 
