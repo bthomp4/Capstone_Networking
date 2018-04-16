@@ -1,4 +1,4 @@
-# This program is used for testing the client program without using the PiCamera
+# This program is used for testing the client program w/o using the PiCamera & Sensors
 
 from socket import *
 import argparse
