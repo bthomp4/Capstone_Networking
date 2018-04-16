@@ -77,7 +77,6 @@ def splitData(data):
 HasLost = False
 VOID_DATA = "VOID"
 
-# Default Picture is our Logo
 picture = "test_decode.jpg"
 
 # array to hold encoded string from client
