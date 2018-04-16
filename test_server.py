@@ -7,8 +7,8 @@ import tkinter
 
 from time import *
 
-import signal
-import sys
+#import signal
+#import sys
 
 #import RPi.GPIO as GPIO
 
@@ -95,9 +95,9 @@ check_pt = 0
 packetsRec = [0] * MSS
 
 # Dictionaries for Flag Values
-dictRec = {'0':'INIT_SYN','1':'INIT_SYNACK','2':'INIT_ACK','3':'FULL_DATA_SYN','4':'FULL_DATA_ACK','5':'SYNC_SYN','6':'SYNC_ACK','7':'DATA_SYN','8':'DATA_ACK','9':'DATA_CAM','A':'DATA_SEN','B':'MODE_SYN','C':'MODE_ACK','D':'DCNT'}
+dictRec = {'0':'INIT_SYN','1':'INIT_SYNACK','2':'INIT_ACK','3':'FULL_DATA_SYN','4':'FULL_DATA_ACK','5':'SYNC_SYN','6':'SYNC_ACK','7':'DATA_SYN','8':'DATA_ACK','9':'DATA_CAM','A':'DATA_SEN','B':'MODE_SYN','C':'MODE_ACK'}
 
-dictSend = {'INIT_SYN':'0','INIT_SYNACK':'1','INIT_ACK':'2','FULL_DATA_SYN':'3','FULL_DATA_ACK':'4','SYNC_SYN':'5','SYNC_ACK':'6','DATA_SYN':'7','DATA_ACK':'8','DATA_CAM':'9','DATA_SEN':'A','MODE_SYN':'B','MODE_ACK':'C','DCNT':'D'}
+dictSend = {'INIT_SYN':'0','INIT_SYNACK':'1','INIT_ACK':'2','FULL_DATA_SYN':'3','FULL_DATA_ACK':'4','SYNC_SYN':'5','SYNC_ACK':'6','DATA_SYN':'7','DATA_ACK':'8','DATA_CAM':'9','DATA_SEN':'A','MODE_SYN':'B','MODE_ACK':'C'}
 
 # GPIO pins and their purpose
 #GPIO_TRIGGER    = 23
@@ -122,18 +122,6 @@ serverPort = 12000
 serverSocket = socket(AF_INET, SOCK_DGRAM)
 serverSocket.bind(('',serverPort))
 print("The server is ready to recieve")
-
-# For handling interrupt to end program
-def signal_handler(signal,frame):
-    message = dictSend['DCNT'] + ',' + MSS_1 + ',' + SN_1 + ',' + VOID_DATA
-    serverSocket.sendto(message.encode(),clientAddress)
-    
-    #GPIO.cleanup()
-    
-    serverSocket.close()
-    sys.exit(0)
-
-signal.signal(signal.SIGINT, signal_handler)
 
 # Setting up gui for displaying image
 w = tkinter.Tk()
@@ -278,9 +266,5 @@ while True:
             #GPIO.output(GPIO_LEDSLEFT,False)
             print("Turn LEFT LEDS OFF")
     
-    elif dictRec[splitPacket[0].decode()] == 'DCNT':
-        # Recieving disconnect from client
-        print("Client disconnecting")
-
     w.update()
     w.update_idletasks()

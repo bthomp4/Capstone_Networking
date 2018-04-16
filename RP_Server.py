@@ -1,6 +1,4 @@
 from socket import *
-#import signal
-#import sys
 
 # for decoding and displaying the image
 import base64
@@ -126,19 +124,6 @@ server_port = 12000
 serverSocket = socket(AF_INET,SOCK_DGRAM)
 serverSocket.bind(('',server_port))
 print("The server is ready to recieve")
-
-#discnt_client_str = 'DCNT, BYE REAR UNIT!'
-#discnt_server_str = 'DCNT, Server Disconnected!'
-
-#def signal_handler(signal,frame,clientAddress):
-#	print('Ctrl+C pressed')
-#	response = discnt_server_str
-#	server_socket.sendto(response.encode(),clientAddress)
-	
-#	server_socket.close()
-#	sys.exit(0)
-
-#signal.signal(signal.SIGINT,signal_handler)
 
 # Setting up gui for displaying image
 w = tkinter.Tk()

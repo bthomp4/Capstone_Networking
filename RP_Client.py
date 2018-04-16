@@ -2,8 +2,9 @@
 
 from socket import *
 import argparse
-#import signal
-#import sys
+
+import signal
+import sys
 
 # for encoding the image
 import base64
@@ -176,6 +177,7 @@ SN_1        = "0001"
 VOID_DATA   = "VOID"
 SS_FlagSize = 4
 SN_FlagSize = 4
+DCNT_flag   = 0
 
 # Dictionaries for Flag Values
 dictRec = {'0':'INIT_SYN','1':'INIT_SYNACK','2':'INIT_ACK','3':'FULL_DATA_SYN','4':
