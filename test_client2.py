@@ -7,9 +7,6 @@ import argparse
 import base64
 from PIL import Image
 
-# for displaying the time
-from datetime import datetime
-
 from time import *
 
 # for GPIO Pins (can only be tested on RPi)
