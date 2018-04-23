@@ -7,10 +7,10 @@ import tkinter
 
 from time import *
 
-#import signal
-#import sys
+import signal
+import sys
 
-#import RPi.GPIO as GPIO
+import RPi.GPIO as GPIO
 
 # ------------------
 # Defining Functions
@@ -99,10 +99,10 @@ dictRec = {'0':'INIT_SYN','1':'INIT_SYNACK','2':'INIT_ACK','3':'FULL_DATA_SYN','
 dictSend = {'INIT_SYN':'0','INIT_SYNACK':'1','INIT_ACK':'2','FULL_DATA_SYN':'3','FULL_DATA_ACK':'4','SYNC_SYN':'5','SYNC_ACK':'6','DATA_SYN':'7','DATA_ACK':'8','DATA_CAM':'9','DATA_SEN':'A','MODE_SYN':'B','MODE_ACK':'C'}
 
 # GPIO pins and their purpose
-#GPIO_TRIGGER    = 23
-#GPIO_ECHO       = 20
-#GPIO_LEDSRIGHT  = 21
-#GPIO_LEDSLEFT   = 27
+GPIO_TRIGGER    = 23
+GPIO_ECHO       = 20
+GPIO_LEDSRIGHT  = 21
+GPIO_LEDSLEFT   = 27
 
 # not needed yet, only testing side sensors
 #GPIO_FRONTLED1  = 2
@@ -121,6 +121,13 @@ serverPort = 12000
 serverSocket = socket(AF_INET, SOCK_DGRAM)
 serverSocket.bind(('',serverPort))
 print("The server is ready to recieve")
+
+def signal_handler(signal,frame):
+    GPIO.cleanup()
+    server_socket.close()
+    sys.exit(0)
+
+signal.signal(signal.SIGINT, signal_handler)
 
 # Setting up gui for displaying image
 w = tkinter.Tk()
