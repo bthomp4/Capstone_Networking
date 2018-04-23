@@ -99,8 +99,8 @@ dictRec = {'0':'INIT_SYN','1':'INIT_SYNACK','2':'INIT_ACK','3':'FULL_DATA_SYN','
 dictSend = {'INIT_SYN':'0','INIT_SYNACK':'1','INIT_ACK':'2','FULL_DATA_SYN':'3','FULL_DATA_ACK':'4','SYNC_SYN':'5','SYNC_ACK':'6','DATA_SYN':'7','DATA_ACK':'8','DATA_CAM':'9','DATA_SEN':'A','MODE_SYN':'B','MODE_ACK':'C'}
 
 # GPIO pins and their purpose
-GPIO_TRIGGER    = 23
-GPIO_ECHO       = 20
+#GPIO_TRIGGER    = 23
+#GPIO_ECHO       = 20
 GPIO_LEDSRIGHT  = 21
 GPIO_LEDSLEFT   = 27
 
@@ -115,6 +115,17 @@ GPIO_LEDSLEFT   = 27
 #GPIO_FRONTLED8  = 9
 #GPIO_FRONTLED9  = 11
 #GPIO_FRONTLED10 = 0
+
+# Set pins as output and input
+#GPIO.setup(GPIO_TRIGGER, GPIO.OUT)
+#GPIO.setup(GPIO_ECHO,GPIO.IN)
+GPIO.setup(GPIO_LEDSRIGHT,GPIO.OUT)
+GPIO.setup(GPIO_LEDSLEFT,GPIO.OUT)
+
+# Set default values to False (low)
+#GPIO.output(GPIO_TRIGGER,False)
+GPIO.output(GPIO_LEDSRIGHT, False)
+GPIO.output(GPIO_LEDSLEFT, False)
 
 # Setting up socket
 serverPort = 12000
@@ -260,16 +271,16 @@ while True:
         RS = int(RightSensor)
 
         if RS <= 120: 
-            #GPIO.output(GPIO_LEDSRIGHT,True)
+            GPIO.output(GPIO_LEDSRIGHT,True)
             print("Turn Right LEDS ON")
         else:
-            #GPIO.output(GPIO_LEDSRIGHT,False)
+            GPIO.output(GPIO_LEDSRIGHT,False)
             print("Turn Right LEDS OFF")
         if LS <= 120:
-            #GPIO.output(GPIO_LEDSLEFT,True)
+            GPIO.output(GPIO_LEDSLEFT,True)
             print("Turn LEFT LEDS ON")
         else:
-            #GPIO.output(GPIO_LEDSLEFT,False)
+            GPIO.output(GPIO_LEDSLEFT,False)
             print("Turn LEFT LEDS OFF")
     
     w.update()
