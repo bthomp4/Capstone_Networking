@@ -1,4 +1,4 @@
-# This program is used for the testing the client side with the PiCamera & Sensors
+# This program is used for the testing the client side with the PiCamera & Sensors and turns on the LEDS that would be turned on in the front
 
 from socket import *
 import argparse
@@ -153,6 +153,11 @@ GPIO_ECHO1    = 24
 GPIO_TRIGGER2 = 5
 GPIO_ECHO2    = 6
 
+# For testing LEDS and making sure sensors are working properly
+GPIO_LEDSRIGHT  = 21
+GPIO_LEDSLEFT   = 27
+# ------------------
+
 # Speed of sound in in/s at temperature
 speedSound = 13500 # in/s
 
@@ -161,10 +166,14 @@ GPIO.setup(GPIO_TRIGGER1,GPIO.OUT) # Trigger 1
 GPIO.setup(GPIO_ECHO1,GPIO.IN)     # Echo 1
 GPIO.setup(GPIO_TRIGGER2,GPIO.OUT) # Trigger 2
 GPIO.setup(GPIO_ECHO2,GPIO.IN)     # ECHO 2
+GPIO.setup(GPIO_LEDSRIGHT,GPIO.OUT)
+GPIO.setup(GPIO_LEDSLEFT,GPIO.OUT)
 
 # Set trigger to False (Low)
 GPIO.output(GPIO_TRIGGER1, False)
 GPIO.output(GPIO_TRIGGER2, False)
+GPIO.output(GPIO_LEDSRIGHT, False)
+GPIO.output(GPIO_LEDSLEFT, False)
 
 # Set file names
 picture = "test.jpg"
@@ -314,6 +323,20 @@ msg_data
         elif data_type == "SEN":
             # Send DATA_SEN message
             LS, RS = UpdateSideSensors()
+
+            # For testing the LEDS and making sure sensors are making properly
+            if RS <= 120:
+                GPIO.output(GPIO_LEDSRIGHT,True)
+                print("Turn Right LEDS ON")
+            else:
+                GPIO.output(GPIO_LEDSRIGHT,False)
+                print("Turn Right LEDS OFF")
+            if LS <= 120:
+                GPIO.output(GPIO_LEDSLEFT,True)
+                print("Turn LEFT LEDS ON")
+            else:
+                GPIO.output(GPIO_LEDSLEFT,False)
+                print("Turn LEFT LEDS OFF")
 
             msg_data = str(LS) + '!' + str(RS)
 
