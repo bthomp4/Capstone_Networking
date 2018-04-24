@@ -101,8 +101,8 @@ dictSend = {'INIT_SYN':'0','INIT_SYNACK':'1','INIT_ACK':'2','FULL_DATA_SYN':'3',
 # GPIO pins and their purpose
 #GPIO_TRIGGER    = 23
 #GPIO_ECHO       = 20
-GPIO_LEDSRIGHT  = 21
-GPIO_LEDSLEFT   = 27
+#GPIO_LEDSRIGHT  = 21
+#GPIO_LEDSLEFT   = 27
 
 # not needed yet, only testing side sensors
 #GPIO_FRONTLED1  = 2
@@ -119,13 +119,13 @@ GPIO_LEDSLEFT   = 27
 # Set pins as output and input
 #GPIO.setup(GPIO_TRIGGER, GPIO.OUT)
 #GPIO.setup(GPIO_ECHO,GPIO.IN)
-GPIO.setup(GPIO_LEDSRIGHT,GPIO.OUT)
-GPIO.setup(GPIO_LEDSLEFT,GPIO.OUT)
+#GPIO.setup(GPIO_LEDSRIGHT,GPIO.OUT)
+#GPIO.setup(GPIO_LEDSLEFT,GPIO.OUT)
 
 # Set default values to False (low)
 #GPIO.output(GPIO_TRIGGER,False)
-GPIO.output(GPIO_LEDSRIGHT, False)
-GPIO.output(GPIO_LEDSLEFT, False)
+#GPIO.output(GPIO_LEDSRIGHT, False)
+#GPIO.output(GPIO_LEDSLEFT, False)
 
 # Setting up socket
 serverPort = 12000
@@ -147,7 +147,7 @@ camImg = ImageTk.PhotoImage(im)
 label = tkinter.Label(w,image=camImg)
 label.pack()
 
-sys_mode = " "
+sys_mode = "BS"
 
 # begin loop
 while True:
@@ -164,7 +164,6 @@ while True:
     elif dictRec[splitPacket[0].decode()] == 'INIT_ACK':
         # Send back MODE_SYN
         # For testing purposes, just do Full Battery for now
-        sys_mode = "FB"
         message = dictSend['MODE_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + sys_mode
         serverSocket.sendto(message.encode(),clientAddress)        
 

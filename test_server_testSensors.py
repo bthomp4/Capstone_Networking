@@ -141,13 +141,13 @@ def signal_handler(signal,frame):
 signal.signal(signal.SIGINT, signal_handler)
 
 # Setting up gui for displaying image
-w = tkinter.Tk()
-im = Image.open(picture)
-camImg = ImageTk.PhotoImage(im)
-label = tkinter.Label(w,image=camImg)
-label.pack()
+#w = tkinter.Tk()
+#im = Image.open(picture)
+#camImg = ImageTk.PhotoImage(im)
+#label = tkinter.Label(w,image=camImg)
+#label.pack()
 
-sys_mode = "BS"
+sys_mode = " "
 
 # begin loop
 while True:
@@ -164,6 +164,7 @@ while True:
     elif dictRec[splitPacket[0].decode()] == 'INIT_ACK':
         # Send back MODE_SYN
         # For testing purposes, just do Full Battery for now
+        sys_mode = "FB"
         message = dictSend['MODE_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + sys_mode
         serverSocket.sendto(message.encode(),clientAddress)        
 
@@ -282,5 +283,5 @@ while True:
             #GPIO.output(GPIO_LEDSLEFT,False)
             #print("Turn LEFT LEDS OFF")
     
-    w.update()
-    w.update_idletasks()
+    #w.update()
+    #w.update_idletasks()
