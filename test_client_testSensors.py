@@ -39,9 +39,9 @@ def measure1():
         stop = time()
 
     elapsed = stop-start
-    distance = (elasped * speedSound/2)
+    distance = (elapsed * speedSound)/24#in/ft
 
-    return distance
+    return distance #in feet
 
 # ----------------------------------------------------
 # measure_average1 finds the average of 3 measurements
@@ -51,13 +51,13 @@ def measure_average1():
     # returns the average.
 
     distance1 = measure1()
-    sleep(0.1)
-    distance2 = measure1()
-    sleep(0.1)
-    distance3 = measure1()
-    distance = distance1 + distance2 + distance3
-    distance = distance/3
-    return distance
+#    sleep(0.1)
+#    distance2 = measure1()
+#    sleep(0.1)
+#    distance3 = measure1()
+#    distance = distance1 + distance2 + distance3
+#    distance = distance/3
+    return distance1
 
 # ---------------------------------------------------
 # measure2 takes a measurement from the second sensor
@@ -77,9 +77,9 @@ def measure2():
         stop = time()
 
     elapsed = stop-start
-    distance = (elapsed * speedSound)/2
+    distance = (elapsed * speedSound)/24#in/ft 
 
-    return distance
+    return distance #in feet
 
 # ----------------------------------------------------
 # measure_average2 finds the average of 3 measurements
@@ -89,14 +89,14 @@ def measure_average2():
     # returns the average.
 
     distance1 = measure2()
-    sleep(0.1)
-    distance2 = measure2()
-    sleep(0.1)
-    distance3 = measure2()
-    distance = distance1 + distance2 + distance3
-    distance = distance/3
+#    sleep(0.1)
+#    distance2 = measure2()
+#    sleep(0.1)
+#    distance3 = measure2()
+#    distance = distance1 + distance2 + distance3
+#    distance = distance/3
 
-    return distance
+    return distance1
 
 # -----------
 # encodeImage
@@ -201,7 +201,7 @@ encode_msgs = []
 # for the mode of the system, FB or BS
 sys_mode = ""
 
-camera = PiCamera()
+#camera = PiCamera()
 
 server_port = 12000
 client_socket = socket(AF_INET,SOCK_DGRAM)
@@ -310,15 +310,20 @@ while True:
             client_socket.sendto(message.encode(),(args.server_name,server_port))
         elif data_type == "SEN":
             # Send DATA_SEN message
+
+#            print("Taking measurements")
+
             LS, RS = UpdateSideSensors()
 
-            if RS <= 120:
+            print("LS: " + str(LS) + "ft" + "\t\tRS: " + str(RS) + "ft")
+
+            if RS <= 10: #if w/i 10ft
                 GPIO.output(GPIO_LEDSRIGHT,True)
                 print("Turn Right LEDS ON")
             else:
                 GPIO.output(GPIO_LEDSRIGHT,False)
                 print("Turn Right LEDS OFF")
-            if LS <= 120:
+            if LS <= 10:
                 GPIO.output(GPIO_LEDSLEFT,True)
                 print("Turn LEFT LEDS ON")
             else:
@@ -350,30 +355,30 @@ while True:
             # Sending both camera and sensor data
 
             if data_type == "VOID" or data_type == "SEN":
-                camera.capture(picture)
+            #    camera.capture(picture)
 
-                string = encodeImage()
+            #    string = encodeImage()
 
-                encode_msgs = []
+            #    encode_msgs = []
 
-                while string:
-                    encode_msgs.append(string[:DATA_SIZE])
-                    string = string[DATA_SIZE:]
+            #    while string:
+            #        encode_msgs.append(string[:DATA_SIZE])
+            #        string = string[DATA_SIZE:]
 
                 # segment size
-                SS = str(len(encode_msgs))
+            #    SS = str(len(encode_msgs))
 
                 # pad segment size to be 4 bytes
-                if (len(SS) != SS_FlagSize):
-                    for i in range(0,(SS_FlagSize - len(SS))):
-                        SS = '0' + SS
+            #    if (len(SS) != SS_FlagSize):
+            #        for i in range(0,(SS_FlagSize - len(SS))):
+            #            SS = '0' + SS
 
                 #Sending SYNC_SYN message
-                msg_data = "CAM" + '!' + SS
-                message = dictSend['SYNC_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + msg_data
+            #    msg_data = "CAM" + '!' + SS
+            #    message = dictSend['SYNC_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + msg_data
 
-                client_socket.sendto(message.encode(), (args.server_name,server_port))
-            elif data_type == "CAM":
+            #    client_socket.sendto(message.encode(), (args.server_name,server_port))
+            #elif data_type == "CAM":
                 # send SYNC_SYN for SENSOR
 
                 message = dictSend['SYNC_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + "SEN!1"
