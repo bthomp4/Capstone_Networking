@@ -1,5 +1,3 @@
-# Server program that doesnt update LEDS for sensors, done in rear module
-
 from socket import *
 
 # for decoding and displaying the image
@@ -11,8 +9,6 @@ from time import *
 
 import signal
 import sys
-
-import RPi.GPIO as GPIO
 
 # ------------------
 # Defining Functions
@@ -100,35 +96,6 @@ dictRec = {'0':'INIT_SYN','1':'INIT_SYNACK','2':'INIT_ACK','3':'FULL_DATA_SYN','
 
 dictSend = {'INIT_SYN':'0','INIT_SYNACK':'1','INIT_ACK':'2','FULL_DATA_SYN':'3','FULL_DATA_ACK':'4','SYNC_SYN':'5','SYNC_ACK':'6','DATA_SYN':'7','DATA_ACK':'8','DATA_CAM':'9','DATA_SEN':'A','MODE_SYN':'B','MODE_ACK':'C'}
 
-# GPIO pins and their purpose
-#GPIO_TRIGGER    = 23
-#GPIO_ECHO       = 20
-#GPIO_LEDSRIGHT  = 21
-#GPIO_LEDSLEFT   = 27
-
-# not needed yet, only testing side sensors
-#GPIO_FRONTLED1  = 2
-#GPIO_FRONTLED2  = 3
-#GPIO_FRONTLED3  = 4
-#GPIO_FRONTLED4  = 17
-#GPIO_FRONTLED5  = 27
-#GPIO_FRONTLED6  = 22
-#GPIO_FRONTLED7  = 10
-#GPIO_FRONTLED8  = 9
-#GPIO_FRONTLED9  = 11
-#GPIO_FRONTLED10 = 0
-
-# Set pins as output and input
-#GPIO.setup(GPIO_TRIGGER, GPIO.OUT)
-#GPIO.setup(GPIO_ECHO,GPIO.IN)
-#GPIO.setup(GPIO_LEDSRIGHT,GPIO.OUT)
-#GPIO.setup(GPIO_LEDSLEFT,GPIO.OUT)
-
-# Set default values to False (low)
-#GPIO.output(GPIO_TRIGGER,False)
-#GPIO.output(GPIO_LEDSRIGHT, False)
-#GPIO.output(GPIO_LEDSLEFT, False)
-
 # Setting up socket
 serverPort = 12000
 serverSocket = socket(AF_INET, SOCK_DGRAM)
@@ -136,7 +103,6 @@ serverSocket.bind(('',serverPort))
 print("The server is ready to recieve")
 
 def signal_handler(signal,frame):
-    GPIO.cleanup()
     server_socket.close()
     sys.exit(0)
 
@@ -202,12 +168,6 @@ while True:
 
             message = dictSend['FULL_DATA_ACK'] + ',' + MSS_1 + ',' + SN_1 + ',' + msg_data
             serverSocket.sendto(message.encode(),clientAddress)
-        elif data_type == "SEN":
-            # For now, just send back a FULL_DATA_ACK
-            msg_data = sys_mode + '!' + "SEN"
-
-            message = dictSend['FULL_DATA_ACK'] + ',' + MSS_1 + ',' + SN_1 + ',' + msg_data
-            serverSocket.sendto(message.encode(),clientAddress)
 
     elif dictRec[splitPacket[0].decode()] == 'SYNC_SYN':
                 
@@ -236,12 +196,6 @@ while True:
                 check_pt = check_pt + (SegmentSize//8) 
             else:
                 HasLost = True
-        elif data_type == "SEN":
-            print("Recieved Data_SYN for Sensor Data")
-            
-            message = dictSend['DATA_ACK'] + ',' + MSS_1 + ',' + SN_1 + ',' + "SEN!VOID"
-            serverSocket.sendto(message.encode(), clientAddress)
-
     elif dictRec[splitPacket[0].decode()] == 'DATA_CAM':
 
         # Second element = SS
@@ -259,31 +213,6 @@ while True:
             encode_string[SegmentNum] = splitPacket[3]
 
         print("Appending SegmentNum : " + str(SegmentNum))
-    
-    elif dictRec[splitPacket[0].decode()] == 'DATA_SEN':
-        # handle the sensor data
-        print("Recieving sensor data")
-    
-        LeftSensor,RightSensor = splitData(splitPacket[3])
-        
-        # Left Sensor Data
-        LS = int(LeftSensor)
-        
-        # Right Sensor Data
-        RS = int(RightSensor)
-
-        if RS <= 120: 
-            #GPIO.output(GPIO_LEDSRIGHT,True)
-            print("Turn Right LEDS ON")
-        else:
-            #GPIO.output(GPIO_LEDSRIGHT,False)
-            print("Turn Right LEDS OFF")
-        if LS <= 120:
-            #GPIO.output(GPIO_LEDSLEFT,True)
-            print("Turn LEFT LEDS ON")
-        else:
-            #GPIO.output(GPIO_LEDSLEFT,False)
-            print("Turn LEFT LEDS OFF")
     
     w.update()
     w.update_idletasks()
