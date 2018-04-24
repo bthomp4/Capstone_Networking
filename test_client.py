@@ -188,7 +188,7 @@ LL_DATA_ACK':'4','SYNC_SYN':'5','SYNC_ACK':'6','DATA_SYN':'7','DATA_ACK':'8','DA
 CAM':'9','DATA_SEN':'A','MODE_SYN':'B','MODE_ACK':'C'}
 
 # check point divider value
-cp = 8
+cp = 1
 
 # initialize encode_msgs list
 encode_msgs = []
