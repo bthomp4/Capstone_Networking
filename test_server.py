@@ -147,7 +147,7 @@ camImg = ImageTk.PhotoImage(im)
 label = tkinter.Label(w,image=camImg)
 label.pack()
 
-sys_mode = "BS"
+sys_mode = "FB"
 
 # begin loop
 while True:
@@ -264,23 +264,23 @@ while True:
         LeftSensor,RightSensor = splitData(splitPacket[3])
         
         # Left Sensor Data
-        LS = int(LeftSensor)
+        #LS = int(LeftSensor)
         
         # Right Sensor Data
-        RS = int(RightSensor)
+        #RS = int(RightSensor)
 
-        if RS <= 120: 
-            GPIO.output(GPIO_LEDSRIGHT,True)
-            print("Turn Right LEDS ON")
-        else:
-            GPIO.output(GPIO_LEDSRIGHT,False)
-            print("Turn Right LEDS OFF")
-        if LS <= 120:
-            GPIO.output(GPIO_LEDSLEFT,True)
-            print("Turn LEFT LEDS ON")
-        else:
-            GPIO.output(GPIO_LEDSLEFT,False)
-            print("Turn LEFT LEDS OFF")
+        #if RS <= 120: 
+        #    GPIO.output(GPIO_LEDSRIGHT,True)
+        #    print("Turn Right LEDS ON")
+        #else:
+        #    GPIO.output(GPIO_LEDSRIGHT,False)
+        #    print("Turn Right LEDS OFF")
+        #if LS <= 120:
+        #    GPIO.output(GPIO_LEDSLEFT,True)
+        #    print("Turn LEFT LEDS ON")
+        #else:
+        #    GPIO.output(GPIO_LEDSLEFT,False)
+        #    print("Turn LEFT LEDS OFF")
     
     w.update()
     w.update_idletasks()
