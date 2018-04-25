@@ -46,18 +46,27 @@ def measure1():
 # ----------------------------------------------------
 # measure_average1 finds the average of 3 measurements
 # ----------------------------------------------------
-def measure_average1():
+def measure_average():
     # This function takes 3 measurements and
     # returns the average.
 
-    distance1 = measure1()
-    sleep(0.1)
-    distance2 = measure1()
-    sleep(0.1)
-    distance3 = measure1()
-    distance = distance1 + distance2 + distance3
-    distance = distance/3
-    return distance
+    n = 3
+    sum1 = sum2 = 0
+    for i in range( 0,n ):
+        sum1 = sum1 + measure1()
+        sum2 = sum2 + measure2()
+    avg1 = sum1 / n
+    avg2 = sum2 / n
+    
+
+    #distance1 = measure1()
+    #sleep(0.1)
+    #distance2 = measure1()
+    #sleep(0.1)
+    #distance3 = measure1()
+    #distance = distance1 + distance2 + distance3
+    #distance = distance/3
+    return avg1, avg2
 
 # ---------------------------------------------------
 # measure2 takes a measurement from the second sensor
@@ -89,14 +98,14 @@ def measure_average2():
     # returns the average.
 
     distance1 = measure2()
-    sleep(0.1)
-    distance2 = measure2()
-    sleep(0.1)
-    distance3 = measure2()
-    distance = distance1 + distance2 + distance3
-    distance = distance/3
+    #sleep(0.1)
+    #distance2 = measure2()
+    #sleep(0.1)
+    #distance3 = measure2()
+    #distance = distance1 + distance2 + distance3
+    #distance = distance/3
 
-    return distance
+    return distance1
 
 # -----------
 # encodeImage
@@ -122,11 +131,13 @@ def UpdateSideSensors():
     GPIO.output(GPIO_TRIGGER1,False)
     GPIO.output(GPIO_TRIGGER2,False)
 
-    sleep(0.5)
-    distance1 = measure_average1()
-    distance2 = measure_average2()
+    return measure_average()
 
-    return distance1, distance2
+    #sleep(0.5)
+    #distance1 = measure_average1()
+    #distance2 = measure_average2()
+
+    #return distance1, distance2
 
 # --------------------------------------------
 # splitData is used to split data based on '!'
@@ -153,6 +164,11 @@ GPIO_ECHO1    = 24
 GPIO_TRIGGER2 = 5
 GPIO_ECHO2    = 6
 
+# for testing the LEDS in rear (temporarily)
+GPIO_LEDSRIGHT = 21
+GPIO_LEDSLEFT  = 27
+# ------
+
 # Speed of sound in in/s at temperature
 speedSound = 13500 # in/s
 
@@ -162,9 +178,19 @@ GPIO.setup(GPIO_ECHO1,GPIO.IN)     # Echo 1
 GPIO.setup(GPIO_TRIGGER2,GPIO.OUT) # Trigger 2
 GPIO.setup(GPIO_ECHO2,GPIO.IN)     # ECHO 2
 
+# for testing the LEDS in rear (temporarily)
+GPIO.setup(GPIO_LEDSRIGHT,GPIO.OUT)
+GPIO.setup(GPIO_LEDSLEFT,GPIO.OUT)
+# ------
+
 # Set trigger to False (Low)
 GPIO.output(GPIO_TRIGGER1, False)
 GPIO.output(GPIO_TRIGGER2, False)
+
+# for testing the LEDS in rear (temporarily)
+GPIO.output(GPIO_LEDSRIGHT, False)
+GPIO.output(GPIO_LEDSLEFT, False)
+# -------
 
 # Set file names
 picture = "test.jpg"
@@ -314,6 +340,21 @@ msg_data
         elif data_type == "SEN":
             # Send DATA_SEN message
             LS, RS = UpdateSideSensors()
+
+            print("LS: " + str(LS) + "ft" + "\t\tRS: " + str(RS) + "ft")
+
+            if RS <= 120: #if w/i 120in or 10ft
+                GPIO.output(GPIO_LEDSRIGHT,True)
+                print("Turn Right LEDS ON")
+            else:
+                GPIO.output(GPIO_LEDSRIGHT,False)
+                print("Turn Right LEDS OFF")
+            if LS <= 120:
+                GPIO.output(GPIO_LEDSLEFT,True)
+                print("Turn LEFT LEDS ON")
+            else:
+                GPIO.output(GPIO_LEDSLEFT,False)
+                print("Turn LEFT LEDS OFF")
 
             msg_data = str(LS) + '!' + str(RS)
 
