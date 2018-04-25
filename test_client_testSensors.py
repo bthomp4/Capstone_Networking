@@ -28,7 +28,7 @@ def measure1():
     # This function measures a distance
     GPIO.output(GPIO_TRIGGER1,True)
     # Wait 10us
-    sleep(0.00001)
+    sleep(0.00001) # this is definitely needed
     GPIO.output(GPIO_TRIGGER1,False)
     start = time()
 
@@ -39,6 +39,8 @@ def measure1():
         stop = time()
 
     elapsed = stop-start
+    # 1 us elapsed = 148 inches distance
+    # distance = elapsed * 148 * (10 ** 6) / 12 # in ft
     distance = (elapsed * speedSound)/24#in/ft
 
     return distance #in feet
@@ -66,7 +68,7 @@ def measure2():
     # This function measures a distance
     GPIO.output(GPIO_TRIGGER2,True)
     # Wait 10us
-    sleep(0.00001)
+    sleep(0.00001) # this initializes the sensor
     GPIO.output(GPIO_TRIGGER2,False)
     start = time()
 
@@ -77,6 +79,8 @@ def measure2():
         stop = time()
 
     elapsed = stop-start
+    # 1us elapsed = 148 inch distance
+    # distance = elapsed * 148 * (10 ** 6) / 12 # in ft
     distance = (elapsed * speedSound)/24#in/ft 
 
     return distance #in feet
@@ -87,6 +91,10 @@ def measure2():
 def measure_average2():
     # This function takes 3 measurements and
     # returns the average.
+
+    # These sleeps should not be needed
+    # distance calculation should be fast enough that we
+    # can still take an average
 
     distance1 = measure2()
 #    sleep(0.1)
