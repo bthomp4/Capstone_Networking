@@ -31,6 +31,7 @@ def measure1():
     sleep(0.00001) # this is definitely needed
     GPIO.output(GPIO_TRIGGER1,False)
     start = time()
+    
 
     while GPIO.input(GPIO_ECHO1)==0:
         start = time()
@@ -41,25 +42,32 @@ def measure1():
     elapsed = stop-start
     # 1 us elapsed = 148 inches distance
     # distance = elapsed * 148 * (10 ** 6) / 12 # in ft
-    distance = (elapsed * speedSound)/24#in/ft
+    distance = (elapsed * speedSound)/2 #inches
 
-    return distance #in feet
+    return distance
 
 # ----------------------------------------------------
 # measure_average1 finds the average of 3 measurements
 # ----------------------------------------------------
-def measure_average1():
+def measure_average():#1():
     # This function takes 3 measurements and
     # returns the average.
 
-    distance1 = measure1()
+    n = 3
+    sum1 = sum2 = 0
+    for i in range( 0,n ):
+        sum1 = sum1 + measure1()
+        sum2 = sum2 + measure2()
+    avg1 = sum1 / n
+    avg2 = sum2 / n
+#    distance1 = measure1()
 #    sleep(0.1)
 #    distance2 = measure1()
 #    sleep(0.1)
 #    distance3 = measure1()
 #    distance = distance1 + distance2 + distance3
 #    distance = distance/3
-    return distance1
+    return avg1, avg2
 
 # ---------------------------------------------------
 # measure2 takes a measurement from the second sensor
@@ -81,9 +89,9 @@ def measure2():
     elapsed = stop-start
     # 1us elapsed = 148 inch distance
     # distance = elapsed * 148 * (10 ** 6) / 12 # in ft
-    distance = (elapsed * speedSound)/24#in/ft 
+    distance = (elapsed * speedSound)/2 #inches
 
-    return distance #in feet
+    return distance
 
 # ----------------------------------------------------
 # measure_average2 finds the average of 3 measurements
@@ -130,11 +138,12 @@ def UpdateSideSensors():
     GPIO.output(GPIO_TRIGGER1,False)
     GPIO.output(GPIO_TRIGGER2,False)
 
-    sleep(0.5)
-    distance1 = measure_average1()
-    distance2 = measure_average2()
+    return measure_average()
+    #sleep(0.5)
+    #distance1 = measure_average1()
+    #distance2 = measure_average2()
 
-    return distance1, distance2
+    #return distance1, distance2
 
 # --------------------------------------------
 # splitData is used to split data based on '!'
@@ -325,13 +334,13 @@ while True:
 
             print("LS: " + str(LS) + "ft" + "\t\tRS: " + str(RS) + "ft")
 
-            if RS <= 10: #if w/i 10ft
+            if RS <= 120: #if w/i 120in or 10ft
                 GPIO.output(GPIO_LEDSRIGHT,True)
                 print("Turn Right LEDS ON")
             else:
                 GPIO.output(GPIO_LEDSRIGHT,False)
                 print("Turn Right LEDS OFF")
-            if LS <= 10:
+            if LS <= 120:
                 GPIO.output(GPIO_LEDSLEFT,True)
                 print("Turn LEFT LEDS ON")
             else:
