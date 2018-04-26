@@ -78,6 +78,7 @@ HasLost = False
 VOID_DATA = "VOID"
 
 picture = "test_decode.jpg"
+logo = "logo.jpg"
 
 # array to hold encoded string from client
 encode_string = []
@@ -142,10 +143,11 @@ signal.signal(signal.SIGINT, signal_handler)
 
 # Setting up gui for displaying image
 w = tkinter.Tk()
-im = Image.open(picture)
+im = Image.open(logo)
 camImg = ImageTk.PhotoImage(im)
 label = tkinter.Label(w,image=camImg)
 label.pack()
+w.update()
 
 sys_mode = "FB"
 
