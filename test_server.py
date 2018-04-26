@@ -10,7 +10,7 @@ from time import *
 import signal
 import sys
 
-import RPi.GPIO as GPIO
+#import RPi.GPIO as GPIO
 
 # ------------------
 # Defining Functions
@@ -160,16 +160,19 @@ while True:
 
     if dictRec[splitPacket[0].decode()] == 'INIT_SYN':
         # send back INIT_SYNACK
+        print("INIT_SYN RECIEVED, SENDING INIT_SYNACK")
         message = dictSend['INIT_SYNACK'] + ',' + MSS_1 + ',' + SN_1 + ',' + VOID_DATA
         
         serverSocket.sendto(message.encode(),clientAddress) 
     elif dictRec[splitPacket[0].decode()] == 'INIT_ACK':
         # Send back MODE_SYN
         # For testing purposes, just do Full Battery for now
+        print("INIT_ACK RECIEVED, SENDING MODE_SYN")
         message = dictSend['MODE_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + sys_mode
         serverSocket.sendto(message.encode(),clientAddress)        
 
         # Wait for MODE_ACK, DATA = "MODE"
+        print("MODE_ACK RECIEVED, SENDING FULL_DATA_ACK")
         response, clientAddress = serverSocket.recvfrom(2048)
 
         # send back FULL_DATA_ACK, DATA = "MODE!VOID"
@@ -179,6 +182,7 @@ while True:
         serverSocket.sendto(message.encode(),clientAddress) 
     elif dictRec[splitPacket[0].decode()] == 'FULL_DATA_SYN':
         
+        print("FULL_DATA_SYN RECIEVED")
         sys_mode,data_type = splitData(splitPacket[3])
 
         if data_type == "CAM":
@@ -199,17 +203,20 @@ while True:
 
             msg_data = sys_mode + '!' + "CAM"
 
+            print("SENDING FULL_DATA_ACK for CAM")
             message = dictSend['FULL_DATA_ACK'] + ',' + MSS_1 + ',' + SN_1 + ',' + msg_data
             serverSocket.sendto(message.encode(),clientAddress)
         elif data_type == "SEN":
             # For now, just send back a FULL_DATA_ACK
             msg_data = sys_mode + '!' + "SEN"
 
+            print("SENDING FULL_DATA_ACK for SEN")
             message = dictSend['FULL_DATA_ACK'] + ',' + MSS_1 + ',' + SN_1 + ',' + msg_data
             serverSocket.sendto(message.encode(),clientAddress)
 
     elif dictRec[splitPacket[0].decode()] == 'SYNC_SYN':
                 
+        print("SYNC_SYN RECIEVED, SENDING SYNC_ACK")
         data_type,SS = splitData(splitPacket[3])
         SegmentSize = int(SS)
 
@@ -220,6 +227,7 @@ while True:
 
     elif dictRec[splitPacket[0].decode()] == 'DATA_SYN':
         
+        print("DATA_SYN RECIEVED")
         data_type,other_data = splitData(splitPacket[3])
 
         if data_type == "CAM": 
@@ -266,23 +274,23 @@ while True:
         LeftSensor,RightSensor = splitData(splitPacket[3])
         
         # Left Sensor Data
-        #LS = float(LeftSensor)
+        LS = float(LeftSensor)
         
         # Right Sensor Data
-        #RS = float(RightSensor)
+        RS = float(RightSensor)
 
-        #if RS <= 120: 
-        #    GPIO.output(GPIO_LEDSRIGHT,True)
-        #    print("Turn Right LEDS ON")
-        #else:
+        if RS <= 120: 
+            #GPIO.output(GPIO_LEDSRIGHT,True)
+            print("Turn Right LEDS ON")
+        else:
         #    GPIO.output(GPIO_LEDSRIGHT,False)
-        #    print("Turn Right LEDS OFF")
-        #if LS <= 120:
+            print("Turn Right LEDS OFF")
+        if LS <= 120:
         #    GPIO.output(GPIO_LEDSLEFT,True)
-        #    print("Turn LEFT LEDS ON")
-        #else:
+            print("Turn LEFT LEDS ON")
+        else:
         #    GPIO.output(GPIO_LEDSLEFT,False)
-        #    print("Turn LEFT LEDS OFF")
+            print("Turn LEFT LEDS OFF")
     
     w.update()
     w.update_idletasks()
