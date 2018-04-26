@@ -93,11 +93,11 @@ def measure2():
 # ----------------------------------------------------
 # measure_average2 finds the average of 3 measurements
 # ----------------------------------------------------
-def measure_average2():
+#def measure_average2():
     # This function takes 3 measurements and
     # returns the average.
 
-    distance1 = measure2()
+    #distance1 = measure2()
     #sleep(0.1)
     #distance2 = measure2()
     #sleep(0.1)
@@ -105,7 +105,7 @@ def measure_average2():
     #distance = distance1 + distance2 + distance3
     #distance = distance/3
 
-    return distance1
+    #return distance1
 
 # -----------
 # encodeImage

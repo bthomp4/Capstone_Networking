@@ -134,7 +134,7 @@ serverSocket.bind(('',serverPort))
 print("The server is ready to recieve")
 
 def signal_handler(signal,frame):
-    GPIO.cleanup()
+    #GPIO.cleanup()
     server_socket.close()
     sys.exit(0)
 
@@ -264,10 +264,10 @@ while True:
         LeftSensor,RightSensor = splitData(splitPacket[3])
         
         # Left Sensor Data
-        #LS = int(LeftSensor)
+        #LS = float(LeftSensor)
         
         # Right Sensor Data
-        #RS = int(RightSensor)
+        #RS = float(RightSensor)
 
         #if RS <= 120: 
         #    GPIO.output(GPIO_LEDSRIGHT,True)
