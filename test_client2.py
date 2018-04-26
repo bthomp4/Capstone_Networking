@@ -37,7 +37,7 @@ from time import *
     #    stop = time()
 
     #elapsed = stop-start
-    #distance = (elasped * speedSound/2)
+    #distance = (elapsed * speedSound/2)
 
     #return distance
 
@@ -209,6 +209,7 @@ parser.add_argument('-s', dest='server_name', help='specifies the IP of the serv
 args = parser.parse_args()
 
 # sending a message to initialize connection
+print("SENDING INIT_SYN")
 message = dictSend['INIT_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + VOID_DATA 
 
 client_socket.sendto(message.encode(),(args.server_name,server_port))
@@ -221,14 +222,18 @@ while True:
 
     if dictRec[splitPacket[0].decode()] == 'INIT_SYNACK':
         # send back an INIT_ACK
+        print("INIT_SYNACK RECIEVED, SENDING INIT_ACK")
         message = dictSend['INIT_ACK'] + ',' + MSS_1 + ',' + SN_1 + ',' + VOID_DATA
         client_socket.sendto(message.encode(),(args.server_name,server_port))
     elif dictRec[splitPacket[0].decode()] == 'MODE_SYN':
         # Send back MODE_ACK
+        print("MODE_SYN RECIEVED, SENDING MODE_ACK")
         sys_mode = splitPacket[3].decode()
         message = dictSend['MODE_ACK'] + ',' + MSS_1 + ',' + SN_1 + ',' + sys_mode 
         client_socket.sendto(message.encode(),(args.server_name,server_port))
     elif dictRec[splitPacket[0].decode()] == 'SYNC_ACK':
+
+        print("SYNC_ACK RECIEVED")
 
         data_type,SS = splitData(splitPacket[3])  
 
@@ -342,6 +347,7 @@ while True:
  
     elif dictRec[splitPacket[0].decode()] == 'FULL_DATA_ACK':
    
+        print("FULL_DATA_ACK RECIEVED")
         sys_mode,data_type = splitData(splitPacket[3])
 
         if sys_mode == "FB":
@@ -378,6 +384,8 @@ while True:
                 message = dictSend['SYNC_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + "SEN!1" 
                 client_socket.sendto(message.encode(), (args.server_name,server_port))
         elif sys_mode == "BS":
+            print("SENDING SYNC_SYN for SEN")
             # Only sending sensor data since display is turned off
             message = dictSend['SYNC_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + "SEN!1"
+            client_socket.sendto(message.encode(), (args.server_name,server_port))
 client_socket.close()
