@@ -24,7 +24,7 @@ from picamera import PiCamera
 # --------------------------------------------------
 # measure1 takes a measurement from the first sensor
 # --------------------------------------------------
-def measure1():
+def measureLeft():
     # This function measures a distance
     GPIO.output(GPIO_TRIGGER1,True)
     # Wait 10us
@@ -51,12 +51,25 @@ def measure_average():
     # returns the average.
 
     n = 3
-    sum1 = sum2 = 0
+    numPingRight = 0
+    numPingLeft = 0
+    flagRight = "N"
+    flagLeft = "N"
+    #sum1 = sum2 = 0
     for i in range( 0,n ):
-        sum1 = sum1 + measure1()
-        sum2 = sum2 + measure2()
-    avg1 = sum1 / n
-    avg2 = sum2 / n
+        if (measureLeft() < 120):
+            numPingLeft = numPingLeft + 1
+        if (measureRight() < 120):
+            numPingRight = numPingRight + 1
+        #sum1 = sum1 + measure1()
+        #sum2 = sum2 + measure2()
+    if ( numPingLeft > (n/2) ):
+        boolLeft = "Y"
+    if ( numPingRight > (n/2) ):
+        boolRight = "Y"
+    return flagLeft, flagRight
+    #avg1 = sum1 / n
+    #avg2 = sum2 / n
     
 
     #distance1 = measure1()
@@ -66,12 +79,12 @@ def measure_average():
     #distance3 = measure1()
     #distance = distance1 + distance2 + distance3
     #distance = distance/3
-    return avg1, avg2
+    #return avg1, avg2
 
 # ---------------------------------------------------
 # measure2 takes a measurement from the second sensor
 # ---------------------------------------------------
-def measure2():
+def measureRight():
     # This function measures a distance
     GPIO.output(GPIO_TRIGGER2,True)
     # Wait 10us
@@ -331,13 +344,13 @@ while True:
 
             print("LS: " + str(LS) + "ft" + "\t\tRS: " + str(RS) + "ft")
 
-            if RS <= 120: #if w/i 120in or 10ft
+            if RS == "Y": #if w/i 120in or 10ft
                 GPIO.output(GPIO_LEDSRIGHT,True)
                 print("Turn Right LEDS ON")
             else:
                 GPIO.output(GPIO_LEDSRIGHT,False)
                 print("Turn Right LEDS OFF")
-            if LS <= 120:
+            if LS == "Y":
                 GPIO.output(GPIO_LEDSLEFT,True)
                 print("Turn LEFT LEDS ON")
             else:
