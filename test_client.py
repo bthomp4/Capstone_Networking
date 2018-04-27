@@ -22,7 +22,7 @@ from picamera import PiCamera
 # -------------------
 
 # --------------------------------------------------
-# measure1 takes a measurement from the first sensor
+# measureLeft takes a measurement from the left sensor
 # --------------------------------------------------
 def measureLeft():
     # This function measures a distance
@@ -43,46 +43,8 @@ def measureLeft():
 
     return distance
 
-# ----------------------------------------------------
-# measure_average1 finds the average of 3 measurements
-# ----------------------------------------------------
-def measure_average():
-    # This function takes 3 measurements and
-    # returns the average.
-
-    n = 3
-    numPingRight = 0
-    numPingLeft = 0
-    flagRight = "N"
-    flagLeft = "N"
-    #sum1 = sum2 = 0
-    for i in range( 0,n ):
-        if (measureLeft() < 120):
-            numPingLeft = numPingLeft + 1
-        if (measureRight() < 120):
-            numPingRight = numPingRight + 1
-        #sum1 = sum1 + measure1()
-        #sum2 = sum2 + measure2()
-    if ( numPingLeft > (n/2) ):
-        boolLeft = "Y"
-    if ( numPingRight > (n/2) ):
-        boolRight = "Y"
-    return flagLeft, flagRight
-    #avg1 = sum1 / n
-    #avg2 = sum2 / n
-    
-
-    #distance1 = measure1()
-    #sleep(0.1)
-    #distance2 = measure1()
-    #sleep(0.1)
-    #distance3 = measure1()
-    #distance = distance1 + distance2 + distance3
-    #distance = distance/3
-    #return avg1, avg2
-
 # ---------------------------------------------------
-# measure2 takes a measurement from the second sensor
+# measureRight takes a measurement from the right sensor
 # ---------------------------------------------------
 def measureRight():
     # This function measures a distance
@@ -102,23 +64,6 @@ def measureRight():
     distance = (elapsed * speedSound)/2
 
     return distance
-
-# ----------------------------------------------------
-# measure_average2 finds the average of 3 measurements
-# ----------------------------------------------------
-#def measure_average2():
-    # This function takes 3 measurements and
-    # returns the average.
-
-    #distance1 = measure2()
-    #sleep(0.1)
-    #distance2 = measure2()
-    #sleep(0.1)
-    #distance3 = measure2()
-    #distance = distance1 + distance2 + distance3
-    #distance = distance/3
-
-    #return distance1
 
 # -----------
 # encodeImage
@@ -144,13 +89,22 @@ def UpdateSideSensors():
     GPIO.output(GPIO_TRIGGER1,False)
     GPIO.output(GPIO_TRIGGER2,False)
 
-    return measure_average()
+    n = 3
+    numPingRight = 0
+    numPingLeft = 0
+    flagRight = "N"
+    flagLeft = "N"
+    for i in range( 0,n ):
+        if (measureLeft() < 120):
+            numPingLeft = numPingLeft + 1
+        if (measureRight() < 120):
+            numPingRight = numPingRight + 1
+    if ( numPingLeft > (n/2) ):
+        flagLeft = "Y"
+    if ( numPingRight > (n/2) ):
+        flagRight = "Y"
 
-    #sleep(0.5)
-    #distance1 = measure_average1()
-    #distance2 = measure_average2()
-
-    #return distance1, distance2
+    return flagLeft, flagRight
 
 # --------------------------------------------
 # splitData is used to split data based on '!'
@@ -342,7 +296,7 @@ while True:
             # Send DATA_SEN message
             LS, RS = UpdateSideSensors()
 
-            print("LS: " + str(LS) + "ft" + "\t\tRS: " + str(RS) + "ft")
+            print("LS: " + str(LS) + "\t\tRS: " + str(RS))
 
             if RS == "Y": #if w/i 120in or 10ft
                 GPIO.output(GPIO_LEDSRIGHT,True)
