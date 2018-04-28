@@ -311,7 +311,7 @@ while True:
                 GPIO.output(GPIO_LEDSLEFT,False)
                 print("Turn LEFT LEDS OFF")
 
-            msg_data = str(LS) + '!' + str(RS)
+            msg_data = LS + '!' + RS
 
             message = dictSend['DATA_SEN'] + ',' + MSS_1 + ',' + SN_1 + ',' + msg_data
             client_socket.sendto(message.encode(), (args.server_name,server_port))

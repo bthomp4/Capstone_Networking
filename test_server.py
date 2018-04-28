@@ -99,13 +99,15 @@ dictRec = {'0':'INIT_SYN','1':'INIT_SYNACK','2':'INIT_ACK','3':'FULL_DATA_SYN','
 
 dictSend = {'INIT_SYN':'0','INIT_SYNACK':'1','INIT_ACK':'2','FULL_DATA_SYN':'3','FULL_DATA_ACK':'4','SYNC_SYN':'5','SYNC_ACK':'6','DATA_SYN':'7','DATA_ACK':'8','DATA_CAM':'9','DATA_SEN':'A','MODE_SYN':'B','MODE_ACK':'C'}
 
-# GPIO pins and their purpose
-#GPIO_TRIGGER    = 23
+# GPIO pins (BCM) and their purpose
+#GPIO_ModeSel    = 16
+
+#GPIO_TRIGGER    = 23 
 #GPIO_ECHO       = 20
 #GPIO_LEDSRIGHT  = 21
 #GPIO_LEDSLEFT   = 27
 
-# not needed yet, only testing side sensors
+# Not handled yet in the design (for Lidar Sensor)
 #GPIO_FRONTLED1  = 2
 #GPIO_FRONTLED2  = 3
 #GPIO_FRONTLED3  = 4
@@ -118,6 +120,8 @@ dictSend = {'INIT_SYN':'0','INIT_SYNACK':'1','INIT_ACK':'2','FULL_DATA_SYN':'3',
 #GPIO_FRONTLED10 = 0
 
 # Set pins as output and input
+#GPIO.setup(GPIO_ModeSel,GPIO.IN)
+
 #GPIO.setup(GPIO_TRIGGER, GPIO.OUT)
 #GPIO.setup(GPIO_ECHO,GPIO.IN)
 #GPIO.setup(GPIO_LEDSRIGHT,GPIO.OUT)
@@ -149,7 +153,13 @@ label = tkinter.Label(w,image=camImg)
 label.pack()
 w.update()
 
-sys_mode = "FB"
+# Setting the mode of the system
+#sys_mode = "FB"
+
+if GPIO.input(GPIO_ModeSel):
+    sys_mode = "FB"
+else:
+    sys_mode = "BS"
 
 # begin loop
 while True:
@@ -271,26 +281,20 @@ while True:
         # handle the sensor data
         print("Recieving sensor data")
     
-        LeftSensor,RightSensor = splitData(splitPacket[3])
-        
-        # Left Sensor Data
-        LS = float(LeftSensor)
-        
-        # Right Sensor Data
-        RS = float(RightSensor)
+        LS,RS = splitData(splitPacket[3])
 
-        if RS <= 120: 
+        #if RS == "Y": 
             #GPIO.output(GPIO_LEDSRIGHT,True)
-            print("Turn Right LEDS ON")
-        else:
-        #    GPIO.output(GPIO_LEDSRIGHT,False)
-            print("Turn Right LEDS OFF")
-        if LS <= 120:
-        #    GPIO.output(GPIO_LEDSLEFT,True)
-            print("Turn LEFT LEDS ON")
-        else:
-        #    GPIO.output(GPIO_LEDSLEFT,False)
-            print("Turn LEFT LEDS OFF")
+            #print("Turn Right LEDS ON")
+        #else:
+            #GPIO.output(GPIO_LEDSRIGHT,False)
+            #print("Turn Right LEDS OFF")
+        #if LS == "Y":
+            #GPIO.output(GPIO_LEDSLEFT,True)
+            #print("Turn LEFT LEDS ON")
+        #else:
+            #GPIO.output(GPIO_LEDSLEFT,False)
+            #print("Turn LEFT LEDS OFF")
     
     w.update()
     w.update_idletasks()
