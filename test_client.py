@@ -185,7 +185,7 @@ encode_msgs = []
 # for the mode of the system, FB or BS
 sys_mode = " "
 
-camera = PiCamera()
+#camera = PiCamera()
 
 server_port = 12000
 client_socket = socket(AF_INET,SOCK_DGRAM)
@@ -219,6 +219,11 @@ while True:
     elif dictRec[splitPacket[0].decode()] == 'MODE_SYN':
         # Send back MODE_ACK
         sys_mode = splitPacket[3].decode()
+
+        # When in Full Battery Mode, turn on Camera
+        if (sys_mode == "FB"):
+            camera = PiCamera()
+
         message = dictSend['MODE_ACK'] + ',' + MSS_1 + ',' + SN_1 + ',' + sys_mode
         client_socket.sendto(message.encode(),(args.server_name,server_port))
     elif dictRec[splitPacket[0].decode()] == 'SYNC_ACK':
@@ -296,6 +301,8 @@ while True:
             # Send DATA_SEN message
             LS, RS = UpdateSideSensors()
 
+            # Here Temporarily, will only exist in front unit in future
+            # -----------------------------------------------
             print("LS: " + str(LS) + "\t\tRS: " + str(RS))
 
             if RS == "Y": #if w/i 120in or 10ft
@@ -310,6 +317,7 @@ while True:
             else:
                 GPIO.output(GPIO_LEDSLEFT,False)
                 print("Turn LEFT LEDS OFF")
+            # --------------------------------------------- 
 
             msg_data = LS + '!' + RS
 
@@ -367,4 +375,5 @@ while True:
         elif sys_mode == "BS":
             # Only sending sensor data since display is turned off
             message = dictSend['SYNC_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + "SEN!1"
+            client_socket.sendto(message.encode(), (args.server_name,server_port))
 client_socket.close()
