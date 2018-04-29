@@ -97,6 +97,8 @@ def signal_handler(signal,frame):
     client_socket.close()
     sys.exit(0)
 
+signal.signal(signal.SIGINT, signal_handler)
+
 # sending a message to initialize connection
 message = dictSend['INIT_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + VOID_DATA 
 
