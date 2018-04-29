@@ -7,6 +7,9 @@ import tkinter
 
 from time import *
 
+import signal
+import sys
+
 import RPi.GPIO as GPIO
 
 # ------------------
@@ -40,7 +43,6 @@ def check_point(SegmentSize):
     global check_pt
     global packetsRec
 
-    print("Check_Pt: " + str(check_pt))
     packet_dropped = -1
     for i in range (check_pt,(check_pt + (SegmentSize//8))):
         if packetsRec[i] == 0:
@@ -77,6 +79,7 @@ VOID_DATA = "VOID"
 
 # Default Picture is our Logo
 picture = "test_decode.jpg"
+logo = "logo.jpg"
 
 # array to hold encoded string from client
 encode_string = []
@@ -93,21 +96,19 @@ check_pt = 0
 packetsRec = [0] * MSS
 
 # Dictionaries for Flag Values
-dictRec = {'0':'INIT_SYN','1':'INIT_SYNACK','2':'INIT_ACK','3':'FULL_DATA_SYN','4':
-'FULL_DATA_ACK','5':'SYNC_SYN','6':'SYNC_ACK','7':'DATA_SYN','8':'DATA_ACK','9':'DA
-TA_CAM','A':'DATA_SEN','B':'MODE_SYN','C':'MODE_ACK'}
+dictRec = {'0':'INIT_SYN','1':'INIT_SYNACK','2':'INIT_ACK','3':'FULL_DATA_SYN','4':'FULL_DATA_ACK','5':'SYNC_SYN','6':'SYNC_ACK','7':'DATA_SYN','8':'DATA_ACK','9':'DATA_CAM','A':'DATA_SEN','B':'MODE_SYN','C':'MODE_ACK'}
 
-dictSend = {'INIT_SYN':'0','INIT_SYNACK':'1','INIT_ACK':'2','FULL_DATA_SYN':'3','FU
-LL_DATA_ACK':'4','SYNC_SYN':'5','SYNC_ACK':'6','DATA_SYN':'7','DATA_ACK':'8','DATA_
-CAM':'9','DATA_SEN':'A','MODE_SYN':'B','MODE_ACK':'C'}
+dictSend = {'INIT_SYN':'0','INIT_SYNACK':'1','INIT_ACK':'2','FULL_DATA_SYN':'3','FULL_DATA_ACK':'4','SYNC_SYN':'5','SYNC_ACK':'6','DATA_SYN':'7','DATA_ACK':'8','DATA_CAM':'9','DATA_SEN':'A','MODE_SYN':'B','MODE_ACK':'C'}
 
-# GPIO pins and their purpose
+# GPIO pins (BCM) and their purpose
+GPIO_ModeSel    = 16
+
 GPIO_TRIGGER    = 23
 GPIO_ECHO       = 20
 GPIO_LEDSRIGHT  = 21
 GPIO_LEDSLEFT   = 27
 
-# not needed yet, only testing side sensors
+# For Lidar Sensor
 #GPIO_FRONTLED1  = 2
 #GPIO_FRONTLED2  = 3
 #GPIO_FRONTLED3  = 4
@@ -119,11 +120,31 @@ GPIO_LEDSLEFT   = 27
 #GPIO_FRONTLED9  = 11
 #GPIO_FRONTLED10 = 0
 
+# Set pins as output and input
+GPIO.setup(GPIO_ModeSel,GPIO.IN)
+
+GPIO.setup(GPIO_TRIGGER, GPIO.OUT)
+GPIO.setup(GPIO_ECHO,GPIO.IN)
+GPIO.setup(GPIO_LEDSRIGHT,GPIO.OUT)
+GPIO.setup(GPIO_LEDSLEFT,GPIO.OUT)
+
+# Set default values to False (low)
+GPIO.output(GPIO_TRIGGER,False)
+GPIO.output(GPIO_LEDSRIGHT, False)
+GPIO.output(GPIO_LEDSLEFT, False)
+
 # Setting up socket
 server_port = 12000
 serverSocket = socket(AF_INET,SOCK_DGRAM)
 serverSocket.bind(('',server_port))
 print("The server is ready to recieve")
+
+def signal_handler(signal,frame):
+    GPIO.cleanup()
+    serverSocket.close()
+    sys.exit(0)
+
+signal.signal(signal.SIGINT, signal_handler)
 
 # Setting up gui for displaying image
 w = tkinter.Tk()
@@ -131,8 +152,12 @@ im = Image.open(picture)
 camImg = ImageTk.PhotoImage(im)
 label = tkinter.Label(w,image=camImg)
 label.pack()
+w.update()
 
-sys_mode = " "
+if GPIO.input(GPIO_ModeSel):
+    sys_mode = "FB"
+else:
+    sys_mode = "BS"
 
 while True:
 
@@ -142,14 +167,12 @@ while True:
 
     if dictRec[splitPacket[0].decode()] == 'INIT_SYN':
         # send back INIT_SYNACK
-        message = dictSend['INIT_SYNACK'] + ',' + MSS_1 + ',' + SN_1 + ',' + VOID_D
-ATA
+        message = dictSend['INIT_SYNACK'] + ',' + MSS_1 + ',' + SN_1 + ',' + VOID_DATA
 
         serverSocket.sendto(message.encode(),clientAddress)
     elif dictRec[splitPacket[0].decode()] == 'INIT_ACK':
         # Send back MODE_SYN
         # For testing purposes, just do Full Battery for now
-        sys_mode = "FB"
         message = dictSend['MODE_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + sys_mode
         serverSocket.sendto(message.encode(),clientAddress)
 
@@ -158,8 +181,7 @@ ATA
 
         # send back FULL_DATA_ACK, DATA = "MODE!VOID"
         msg_data = sys_mode + '!' + VOID_DATA
-        message = dictSend['FULL_DATA_ACK'] + ',' + MSS_1 + ',' + SN_1 + ',' + msg_
-data
+        message = dictSend['FULL_DATA_ACK'] + ',' + MSS_1 + ',' + SN_1 + ',' + msg_data
 
         serverSocket.sendto(message.encode(),clientAddress)
     elif dictRec[splitPacket[0].decode()] == 'FULL_DATA_SYN':
@@ -188,8 +210,7 @@ data
         elif data_type == "SEN":
             msg_data = sys_mode + '!' + "SEN"
 
-            message = dictSend['FULL_DATA_ACK'] + ',' + MSS_1 + ',' + SN_1 + ',' +
-msg_data
+            message = dictSend['FULL_DATA_ACK'] + ',' + MSS_1 + ',' + SN_1 + ',' +msg_data
             serverSocket.sendto(message.encode(),clientAddress)
 
     elif dictRec[splitPacket[0].decode()] == 'SYNC_SYN':
@@ -219,8 +240,7 @@ msg_data
             else:
                 HasLost = True
         elif data_type == "SEN":
-            message = dictSend['DATA_ACK'] + ',' + MSS_1 + ',' + SN_1 + ',' + "SEN!
-VOID"
+            message = dictSend['DATA_ACK'] + ',' + MSS_1 + ',' + SN_1 + ',' + "SEN!VOID"
             serverSocket.sendto(message.encode(), clientAddress)
 
     elif dictRec[splitPacket[0].decode()] == 'DATA_CAM':
@@ -241,19 +261,13 @@ VOID"
 
     elif dictRec[splitPacket[0].decode()] == 'DATA_SEN':
         # handle the sensor data
-        LeftSensor,RightSensor = splitData(splitPacket[3])
+        LS,RS = splitData(splitPacket[3])
 
-        # Left Sensor Data
-        LS = int(LeftSensor)
-
-        # Right Sensor Data
-        RS = int(RightSensor)
-
-        if RS <= 120:
+        if RS == "Y":
             GPIO.output(GPIO_LEDSRIGHT,True)
         else:
             GPIO.output(GPIO_LEDSRIGHT,False)
-        if LS <= 120:
+        if LS == "Y":
             GPIO.output(GPIO_LEDSLEFT,True)
         else:
             GPIO.output(GPIO_LEDSLEFT,False)
