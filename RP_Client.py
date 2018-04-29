@@ -12,7 +12,7 @@ from PIL import Image
 
 from time import *
 
-# for GPIO Pins (can only be tested on RPi)
+# For GPIO Pins
 import RPi.GPIO as GPIO
 
 from picamera import PiCamera
@@ -24,7 +24,7 @@ from picamera import PiCamera
 # --------------------------------------------------
 # measure1 takes a measurement from the first sensor
 # --------------------------------------------------
-def measure1():
+def measureLeft():
     # This function measures a distance
     GPIO.output(GPIO_TRIGGER1,True)
     # Wait 10us
@@ -39,30 +39,14 @@ def measure1():
         stop = time()
 
     elapsed = stop-start
-    distance = (elasped * speedSound/2)
+    distance = (elapsed * speedSound/2)
 
-    return distance
-
-# ----------------------------------------------------
-# measure_average1 finds the average of 3 measurements
-# ----------------------------------------------------
-def measure_average1():
-    # This function takes 3 measurements and
-    # returns the average.
-
-    distance1 = measure1()
-    sleep(0.1)
-    distance2 = measure1()
-    sleep(0.1)
-    distance3 = measure1()
-    distance = distance1 + distance2 + distance3
-    distance = distance/3
     return distance
 
 # ---------------------------------------------------
 # measure2 takes a measurement from the second sensor
 # ---------------------------------------------------
-def measure2():
+def measureRight():
     # This function measures a distance
     GPIO.output(GPIO_TRIGGER2,True)
     # Wait 10us
@@ -78,23 +62,6 @@ def measure2():
 
     elapsed = stop-start
     distance = (elapsed * speedSound)/2
-
-    return distance
-
-# ----------------------------------------------------
-# measure_average2 finds the average of 3 measurements
-# ----------------------------------------------------
-def measure_average2():
-    # This function takes 3 measurements and
-    # returns the average.
-
-    distance1 = measure2()
-    sleep(0.1)
-    distance2 = measure2()
-    sleep(0.1)
-    distance3 = measure2()
-    distance = distance1 + distance2 + distance3
-    distance = distance/3
 
     return distance
 
@@ -122,11 +89,22 @@ def UpdateSideSensors():
     GPIO.output(GPIO_TRIGGER1,False)
     GPIO.output(GPIO_TRIGGER2,False)
 
-    sleep(0.5)
-    distance1 = measure_average1()
-    distance2 = measure_average2()
+    n = 3
+    numPingRight = 0
+    numPingLeft = 0
+    flagRight = "N"
+    flagLeft = "N"
+    for i in range( 0,n ):
+        if (measureLeft() < 120):
+            numPingLeft = numPingLeft + 1
+        if (measureRight() < 120):
+            numPingRight = numPingRight + 1
+    if ( numPingLeft > (n/2) ):
+        flagLeft = "Y"
+    if ( numPingRight > (n/2) ):
+        flagRight = "Y"
 
-    return distance1, distance2
+    return flagLeft, flagRight
 
 # --------------------------------------------
 # splitData is used to split data based on '!'
@@ -180,16 +158,12 @@ SN_FlagSize = 4
 DCNT_flag   = 0
 
 # Dictionaries for Flag Values
-dictRec = {'0':'INIT_SYN','1':'INIT_SYNACK','2':'INIT_ACK','3':'FULL_DATA_SYN','4':
-'FULL_DATA_ACK','5':'SYNC_SYN','6':'SYNC_ACK','7':'DATA_SYN','8':'DATA_ACK','9':'DA
-TA_CAM','A':'DATA_SEN','B':'MODE_SYN','C':'MODE_ACK'}
+dictRec = {'0':'INIT_SYN','1':'INIT_SYNACK','2':'INIT_ACK','3':'FULL_DATA_SYN','4':'FULL_DATA_ACK','5':'SYNC_SYN','6':'SYNC_ACK','7':'DATA_SYN','8':'DATA_ACK','9':'DATA_CAM','A':'DATA_SEN','B':'MODE_SYN','C':'MODE_ACK'}
 
-dictSend = {'INIT_SYN':'0','INIT_SYNACK':'1','INIT_ACK':'2','FULL_DATA_SYN':'3','FU
-LL_DATA_ACK':'4','SYNC_SYN':'5','SYNC_ACK':'6','DATA_SYN':'7','DATA_ACK':'8','DATA_
-CAM':'9','DATA_SEN':'A','MODE_SYN':'B','MODE_ACK':'C'}
+dictSend = {'INIT_SYN':'0','INIT_SYNACK':'1','INIT_ACK':'2','FULL_DATA_SYN':'3','FULL_DATA_ACK':'4','SYNC_SYN':'5','SYNC_ACK':'6','DATA_SYN':'7','DATA_ACK':'8','DATA_CAM':'9','DATA_SEN':'A','MODE_SYN':'B','MODE_ACK':'C'}
 
 # check point divider value
-cp = 8
+cp = 1
 
 # initialize encode_msgs list
 encode_msgs = []
@@ -197,14 +171,19 @@ encode_msgs = []
 # for the mode of the system, FB or BS
 sys_mode = " "
 
-camera = PiCamera()
-
 server_port = 12000
 client_socket = socket(AF_INET,SOCK_DGRAM)
 
 parser = argparse.ArgumentParser(description='sending images')
 parser.add_argument('-s', dest='server_name', help='specifies the IP of the server, this is required', required=True)
 args = parser.parse_args()
+
+def signal_handler(signal,frame):
+    GPIO.cleanup()
+    client_socket.close()
+    sys.exit(0)
+
+signal.signal(signal.SIGINT, signal_handler)
 
 # sending a message to initialize connection
 message = dictSend['INIT_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + VOID_DATA
@@ -224,6 +203,11 @@ while True:
     elif dictRec[splitPacket[0].decode()] == 'MODE_SYN':
         # Send back MODE_ACK
         sys_mode = splitPacket[3].decode()
+
+        # When in Full Battery Mode, turn on Camera
+        if (sys_mode == "FB"):
+            camera = PiCamera()
+
         message = dictSend['MODE_ACK'] + ',' + MSS_1 + ',' + SN_1 + ',' + sys_mode
         client_socket.sendto(message.encode(),(args.server_name,server_port))
     elif dictRec[splitPacket[0].decode()] == 'SYNC_ACK':
@@ -262,10 +246,9 @@ while True:
 
                     # sending Data_Syn to server
                     msg_data = "CAM!" + SS
-                    message = dictSend['DATA_SYN'] + ',' + MSS_1 + ',' + SN_1 + ','
- + msg_data
-                    client_socket.sendto(message.encode(), (args.server_name,server
-_port))
+                    message = dictSend['DATA_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + msg_data
+                    client_socket.sendto(message.encode(), (args.server_name,server_port))
+
                     # waiting to see if all packets have been recieved
                     response,serverAddress = client_socket.recvfrom(2048)
                     splitResponse = response.split(b',')
@@ -281,14 +264,12 @@ _port))
                             if (len(SN) != SN_FlagSize):
                                 for l in range(0,(SN_FlagSize + len(SN))):
                                     SN = '0' + SN
-                            message = dictSend['DATA_CAM'] + ',' + SS + ',' + SN +
-','
+                            message = dictSend['DATA_CAM'] + ',' + SS + ',' + SN + ','
                             client_socket.sendto(message.encode() + data, (args.server_name, server_port))
 
                         # sending data syn to server
                         msg_data = "CAM!" + SS
-                        message = dictSend['DATA_SYN'] + ',' + MSS_1 + ',' + SN_1 +
- ',' + msg_data
+                        message = dictSend['DATA_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + msg_data
                         client_socket.sendto(message.encode(), (args.server_name,server_port))
                         response,serverAddress = client_socket.recvfrom(2048)
                         splitResponse = response.split(b',')
@@ -299,22 +280,19 @@ _port))
                 num_packet = num_packet + 1
 
             msg_data = sys_mode + '!' + "CAM"
-            message = dictSend['FULL_DATA_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' +
-msg_data
+            message = dictSend['FULL_DATA_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + msg_data
             client_socket.sendto(message.encode(),(args.server_name,server_port))
         elif data_type == "SEN":
             # Send DATA_SEN message
             LS, RS = UpdateSideSensors()
 
-            msg_data = str(LS) + '!' + str(RS)
+            msg_data = LS + '!' + RS
 
-            message = dictSend['DATA_SEN'] + ',' + MSS_1 + ',' + SN_1 + ',' + msg_d
-ata
+            message = dictSend['DATA_SEN'] + ',' + MSS_1 + ',' + SN_1 + ',' + msg_data
             client_socket.sendto(message.encode(), (args.server_name,server_port))
 
             # Send DATA_SYN
-            message = dictSend['DATA_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + "SEN!
-VOID"
+            message = dictSend['DATA_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + "SEN!VOID"
             client_socket.sendto(message.encode(), (args.server_name,server_port))
 
             # Wait for DATA_ACK from Server
@@ -322,8 +300,7 @@ VOID"
 
             # Then send a FULL_DATA_SYN
             msg_data = sys_mode + '!' + "SEN"
-            message = dictSend['FULL_DATA_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' +
-msg_data
+            message = dictSend['FULL_DATA_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + msg_data
             client_socket.sendto(message.encode(), (args.server_name,server_port))
 
     elif dictRec[splitPacket[0].decode()] == 'FULL_DATA_ACK':
@@ -360,12 +337,10 @@ msg_data
             elif data_type == "CAM":
                 # send SYNC_SYN for SENSOR
 
-                message = dictSend['SYNC_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + "
-SEN!1"
-                client_socket.sendto(message.encode(), (args.server_name,server_por
-t))
+                message = dictSend['SYNC_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + "SEN!1"
+                client_socket.sendto(message.encode(), (args.server_name,server_port))
         elif sys_mode == "BS":
             # Only sending sensor data since display is turned off
-            message = dictSend['SYNC_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + "SEN!
-1"
+            message = dictSend['SYNC_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + "SEN!1"
+            client_socket.sendto(message.encode(), (args.server_name,server_port))
 client_socket.close()
