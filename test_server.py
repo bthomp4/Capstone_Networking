@@ -140,7 +140,7 @@ print("The server is ready to recieve")
 
 def signal_handler(signal,frame):
     #GPIO.cleanup()
-    server_socket.close()
+    serverSocket.close()
     sys.exit(0)
 
 signal.signal(signal.SIGINT, signal_handler)
@@ -154,12 +154,12 @@ label.pack()
 w.update()
 
 # Setting the mode of the system
-#sys_mode = "FB"
+sys_mode = "BS"
 
-if GPIO.input(GPIO_ModeSel):
-    sys_mode = "FB"
-else:
-    sys_mode = "BS"
+#if GPIO.input(GPIO_ModeSel):
+#    sys_mode = "FB"
+#else:
+#    sys_mode = "BS"
 
 # begin loop
 while True:
