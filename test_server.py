@@ -154,7 +154,7 @@ label.pack()
 w.update()
 
 # Setting the mode of the system
-sys_mode = "BS"
+sys_mode = "FB"
 
 #if GPIO.input(GPIO_ModeSel):
 #    sys_mode = "FB"
@@ -170,19 +170,15 @@ while True:
 
     if dictRec[splitPacket[0].decode()] == 'INIT_SYN':
         # send back INIT_SYNACK
-        print("INIT_SYN RECIEVED, SENDING INIT_SYNACK")
         message = dictSend['INIT_SYNACK'] + ',' + MSS_1 + ',' + SN_1 + ',' + VOID_DATA
         
         serverSocket.sendto(message.encode(),clientAddress) 
     elif dictRec[splitPacket[0].decode()] == 'INIT_ACK':
         # Send back MODE_SYN
-        # For testing purposes, just do Full Battery for now
-        print("INIT_ACK RECIEVED, SENDING MODE_SYN")
         message = dictSend['MODE_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + sys_mode
         serverSocket.sendto(message.encode(),clientAddress)        
 
         # Wait for MODE_ACK, DATA = "MODE"
-        print("MODE_ACK RECIEVED, SENDING FULL_DATA_ACK")
         response, clientAddress = serverSocket.recvfrom(2048)
 
         # send back FULL_DATA_ACK, DATA = "MODE!VOID"
@@ -192,11 +188,9 @@ while True:
         serverSocket.sendto(message.encode(),clientAddress) 
     elif dictRec[splitPacket[0].decode()] == 'FULL_DATA_SYN':
         
-        print("FULL_DATA_SYN RECIEVED")
         sys_mode,data_type = splitData(splitPacket[3])
 
         if data_type == "CAM":
-            print("Client done sending all packets for image")
             
             #reset values 
             check_pt = 0
@@ -213,20 +207,16 @@ while True:
 
             msg_data = sys_mode + '!' + "CAM"
 
-            print("SENDING FULL_DATA_ACK for CAM")
             message = dictSend['FULL_DATA_ACK'] + ',' + MSS_1 + ',' + SN_1 + ',' + msg_data
             serverSocket.sendto(message.encode(),clientAddress)
         elif data_type == "SEN":
-            # For now, just send back a FULL_DATA_ACK
             msg_data = sys_mode + '!' + "SEN"
 
-            print("SENDING FULL_DATA_ACK for SEN")
             message = dictSend['FULL_DATA_ACK'] + ',' + MSS_1 + ',' + SN_1 + ',' + msg_data
             serverSocket.sendto(message.encode(),clientAddress)
 
     elif dictRec[splitPacket[0].decode()] == 'SYNC_SYN':
                 
-        print("SYNC_SYN RECIEVED, SENDING SYNC_ACK")
         data_type,SS = splitData(splitPacket[3])
         SegmentSize = int(SS)
 
@@ -237,12 +227,10 @@ while True:
 
     elif dictRec[splitPacket[0].decode()] == 'DATA_SYN':
         
-        print("DATA_SYN RECIEVED")
         data_type,other_data = splitData(splitPacket[3])
 
         if data_type == "CAM": 
             #check for packet loss
-            print("Checking for packet loss")
 
             SegmentSize = int(other_data)
 
@@ -254,8 +242,6 @@ while True:
             else:
                 HasLost = True
         elif data_type == "SEN":
-            print("Recieved Data_SYN for Sensor Data")
-            
             message = dictSend['DATA_ACK'] + ',' + MSS_1 + ',' + SN_1 + ',' + "SEN!VOID"
             serverSocket.sendto(message.encode(), clientAddress)
 
@@ -275,11 +261,8 @@ while True:
         else:
             encode_string[SegmentNum] = splitPacket[3]
 
-        print("Appending SegmentNum : " + str(SegmentNum))
-    
     elif dictRec[splitPacket[0].decode()] == 'DATA_SEN':
         # handle the sensor data
-        print("Recieving sensor data")
     
         LS,RS = splitData(splitPacket[3])
 
