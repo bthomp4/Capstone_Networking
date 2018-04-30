@@ -366,6 +366,7 @@ while True:
 
             # Here Temporarily, will only exist in front unit in future
             # -----------------------------------------------
+            print("===Ultrasonic Test===")
             print("LS: " + str(LS) + "\t\tRS: " + str(RS))
 
             if RS == "Y": #if w/i 120in or 10ft
@@ -380,7 +381,11 @@ while True:
             else:
                 GPIO.output(GPIO_LEDSLEFT,False)
                 print("Turn LEFT LEDS OFF")
-            # --------------------------------------------- 
+            # -----------------------------------------------
+            # Testing LiDAR code
+            # -----------------------------------------------
+            print("=====LiDAR Test=====")
+            print( "\tNumber of LEDs: " + str(UpdateLidar()) )
 
             msg_data = LS + '!' + RS
 
