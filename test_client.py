@@ -126,69 +126,6 @@ def splitData(data):
 
     return data1, data2
 
-# ------------------------------------------------
-# MeasureLidar takes measurement to nearest object
-# in front of the rider. Returns the distance to
-# that object
-# ------------------------------------------------
-#def MeasureLidar():
-    # This function measures a distance
-#    GPIO.output(GPIO_TRIGGER, True)
-    # Wait 10us
-#    time.sleep(0.00001) # this is needed
-#    GPIO.output(GPIO_TRIGGER, False)
-#    start = time.time()
-
-#    while GPIO.input(GPIO_ECHO) == 0:
-#        start = time.time()
-
-#    while GPIO.input(GPIO_ECHO) == 1:
-#        stop = time.time()
-
-#    stop = time.time()
-
-#    elapsed = stop - start # every 10 microseconds = 1 cm
-#    distance = elapsed * (10  ** 5) # in cm
-#    distance = distance  * 0.0328084 # in feet
-
-#    return distance
-
-#def UpdateLidar():
-    # This function takes 'n' measurements and
-    # returns how many LEDs should be on
-
-#    n = 3
-#    numLEDs = 0
-
-    # sumDist = 0
-    # for i in range( 0,n ):
-        # sumist = sumDist + MeasureLidar()
-    # avgDist = sumDist / n
-
-#    listDist = []
-#    for i in range(n):
-#        listDist.append(MeasureLidar())
-#    listDist.sort()
-
-#    avgDist = listDist[0]   #not true, lazy programming
-#    if avgDist >= 12 and avgDist < 24:
-#        numLEDs = 1
-#    elif avgDist >= 24 and avgDist < 36:
-#        numLEDs = 2
-#    elif avgDist >= 36 and avgDist < 48:
-#        numLEDs = 3
-#    elif avgDist >= 48 and avgDist < 60:
-#        numLEDs = 4
-#    elif avgDist >= 60 and avgDist < 72:
-#        numLEDs = 5
-#    elif avgDist >= 72 and avgDist < 84:
-#        numLEDs = 6
-#    elif avgDist >= 84 and avgDist < 96:
-#        numLEDs = 7
-#    elif avgDist >= 96 and avgDist < 108:
-#        numLEDs = 8
-
-#    return numLEDs
 # ---------------
 # Main Script
 # ---------------
