@@ -150,12 +150,18 @@ def UpdateLidar():
 
     n = 3
     numLEDs = 0
-    sumDist = 0
-    #listDist = []
-    for i in range( 0,n ):
-        sumist = sumDist + MeasureLidar()
-    avgDist = sumDist / n
 
+    # sumDist = 0
+    # for i in range( 0,n ):
+        # sumist = sumDist + MeasureLidar()
+    # avgDist = sumDist / n
+
+    listDist = []
+    for i in range(n):
+        listDist.append(MeasureLidar())
+    listDist.sort()
+
+    avgDist = listDist[0]   #not true, lazy programming
     if avgDist >= 12 and avgDist < 24:
         numLEDs = 1
     elif avgDist >= 24 and avgDist < 36:
