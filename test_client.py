@@ -98,10 +98,15 @@ def UpdateSideSensors():
     numPingLeft = 0
     flagRight = "N"
     flagLeft = "N"
+
     for i in range( 0,n ):
-        if (MeasureLeft() < 120):
+        leftMeasure = MeasureLeft()
+        if (leftMeasure < 120):
+            print(str(i) + "Left Measure" + str(leftMeasure))
             numPingLeft = numPingLeft + 1
-        if (MeasureRight() < 120):
+        rightMeasure = MeasureRight()
+        if (rightMeasure < 120):
+            print(str(i) + "Right Measure" + str(rightMeasure))
             numPingRight = numPingRight + 1
     if ( numPingLeft > (n/2) ):
         flagLeft = "Y"
@@ -126,64 +131,64 @@ def splitData(data):
 # in front of the rider. Returns the distance to
 # that object
 # ------------------------------------------------
-def MeasureLidar():
+#def MeasureLidar():
     # This function measures a distance
-    GPIO.output(GPIO_TRIGGER, True)
+#    GPIO.output(GPIO_TRIGGER, True)
     # Wait 10us
-    time.sleep(0.00001) # this is needed
-    GPIO.output(GPIO_TRIGGER, False)
-    start = time.time()
+#    time.sleep(0.00001) # this is needed
+#    GPIO.output(GPIO_TRIGGER, False)
+#    start = time.time()
 
-    while GPIO.input(GPIO_ECHO) == 0:
-        start = time.time()
+#    while GPIO.input(GPIO_ECHO) == 0:
+#        start = time.time()
 
-    while GPIO.input(GPIO_ECHO) == 1:
-        stop = time.time()
+#    while GPIO.input(GPIO_ECHO) == 1:
+#        stop = time.time()
 
-    stop = time.time()
+#    stop = time.time()
 
-    elapsed = stop - start # every 10 microseconds = 1 cm
-    distance = elapsed * (10  ** 5) # in cm
-    distance = distance  * 0.0328084 # in feet
+#    elapsed = stop - start # every 10 microseconds = 1 cm
+#    distance = elapsed * (10  ** 5) # in cm
+#    distance = distance  * 0.0328084 # in feet
 
-    return distance
+#    return distance
 
-def UpdateLidar():
+#def UpdateLidar():
     # This function takes 'n' measurements and
     # returns how many LEDs should be on
 
-    n = 3
-    numLEDs = 0
+#    n = 3
+#    numLEDs = 0
 
     # sumDist = 0
     # for i in range( 0,n ):
         # sumist = sumDist + MeasureLidar()
     # avgDist = sumDist / n
 
-    listDist = []
-    for i in range(n):
-        listDist.append(MeasureLidar())
-    listDist.sort()
+#    listDist = []
+#    for i in range(n):
+#        listDist.append(MeasureLidar())
+#    listDist.sort()
 
-    avgDist = listDist[0]   #not true, lazy programming
-    if avgDist >= 12 and avgDist < 24:
-        numLEDs = 1
-    elif avgDist >= 24 and avgDist < 36:
-        numLEDs = 2
-    elif avgDist >= 36 and avgDist < 48:
-        numLEDs = 3
-    elif avgDist >= 48 and avgDist < 60:
-        numLEDs = 4
-    elif avgDist >= 60 and avgDist < 72:
-        numLEDs = 5
-    elif avgDist >= 72 and avgDist < 84:
-        numLEDs = 6
-    elif avgDist >= 84 and avgDist < 96:
-        numLEDs = 7
-    elif avgDist >= 96 and avgDist < 108:
-        numLEDs = 8
+#    avgDist = listDist[0]   #not true, lazy programming
+#    if avgDist >= 12 and avgDist < 24:
+#        numLEDs = 1
+#    elif avgDist >= 24 and avgDist < 36:
+#        numLEDs = 2
+#    elif avgDist >= 36 and avgDist < 48:
+#        numLEDs = 3
+#    elif avgDist >= 48 and avgDist < 60:
+#        numLEDs = 4
+#    elif avgDist >= 60 and avgDist < 72:
+#        numLEDs = 5
+#    elif avgDist >= 72 and avgDist < 84:
+#        numLEDs = 6
+#    elif avgDist >= 84 and avgDist < 96:
+#        numLEDs = 7
+#    elif avgDist >= 96 and avgDist < 108:
+#        numLEDs = 8
 
-    return numLEDs
+#    return numLEDs
 # ---------------
 # Main Script
 # ---------------
@@ -226,7 +231,7 @@ GPIO.output(GPIO_LEDSRIGHT, False)
 GPIO.output(GPIO_LEDSLEFT, False)
 # -------
 
-time.sleep(0.5)
+sleep(0.5)
 
 # Set file names
 picture = "test.jpg"
@@ -390,8 +395,8 @@ while True:
             # -----------------------------------------------
             # Testing LiDAR code
             # -----------------------------------------------
-            print("=====LiDAR Test=====")
-            print( "\tNumber of LEDs: " + str(UpdateLidar()) )
+            #print("=====LiDAR Test=====")
+            #print( "\tNumber of LEDs: " + str(UpdateLidar()) )
 
             msg_data = LS + '!' + RS
 
