@@ -38,6 +38,8 @@ def MeasureLeft():
     while GPIO.input(GPIO_ECHO1)==1:
         stop = time()
 
+    stop = time()
+
     elapsed = stop-start
     distance = (elapsed * speedSound/2)
 
@@ -46,7 +48,7 @@ def MeasureLeft():
 # ---------------------------------------------------
 # MeasureRight takes a measurement from the right sensor
 # ---------------------------------------------------
-def measureRight():
+def MeasureRight():
     # This function measures a distance
     GPIO.output(GPIO_TRIGGER2,True)
     # Wait 10us
@@ -59,6 +61,8 @@ def measureRight():
 
     while GPIO.input(GPIO_ECHO2)==1:
         stop = time()
+
+    stop = time()
 
     elapsed = stop-start
     distance = (elapsed * speedSound)/2
@@ -221,6 +225,8 @@ GPIO.output(GPIO_TRIGGER2, False)
 GPIO.output(GPIO_LEDSRIGHT, False)
 GPIO.output(GPIO_LEDSLEFT, False)
 # -------
+
+time.sleep(0.5)
 
 # Set file names
 picture = "test.jpg"
