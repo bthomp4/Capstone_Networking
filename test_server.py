@@ -193,6 +193,8 @@ while True:
         sys_mode,data_type = splitData(splitPacket[3])
 
         if data_type == "CAM":
+
+            print("Received Full Picture")
             
             #reset values 
             check_pt = 0
@@ -265,21 +267,23 @@ while True:
 
     elif dictRec[splitPacket[0].decode()] == 'DATA_SEN':
         # handle the sensor data
+
+        print("Recieving Sensor Data")
     
         LS,RS = splitData(splitPacket[3])
 
-        #if RS == "Y": 
+        if RS == "Y": 
             #GPIO.output(GPIO_LEDSRIGHT,True)
-            #print("Turn Right LEDS ON")
-        #else:
+            print("Turn Right LEDS ON")
+        else:
             #GPIO.output(GPIO_LEDSRIGHT,False)
-            #print("Turn Right LEDS OFF")
-        #if LS == "Y":
+            print("Turn Right LEDS OFF")
+        if LS == "Y":
             #GPIO.output(GPIO_LEDSLEFT,True)
-            #print("Turn LEFT LEDS ON")
-        #else:
+            print("Turn LEFT LEDS ON")
+        else:
             #GPIO.output(GPIO_LEDSLEFT,False)
-            #print("Turn LEFT LEDS OFF")
+            print("Turn LEFT LEDS OFF")
     
     w.update()
     w.update_idletasks()
