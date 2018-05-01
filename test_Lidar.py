@@ -2,6 +2,9 @@ import RPi.GPIO as GPIO
 
 from time import *
 
+
+LEDs = 0
+
 # ------------------------------------------------
 # MeasureLidar takes measurement to nearest object
 # in front of the rider. Returns the distance to
@@ -33,39 +36,50 @@ def MeasureLidar():
 # This function takes 'n' measurements and
 # returns how many LEDs should be on
 def UpdateLidar():
-
+    global LEDs
+    # Number of Measurements being taken
     n = 3
-    numLEDs = 0
 
-    sumDist = 0
-    for i in range( 0,n ):
-        sumist = sumDist + MeasureLidar()
-    avgDist = sumDist / n
-
+    # Initialized to zero
+    
+    lightLeds = []
     listDist = []
-    for i in range(n):
+    for i in range(0,n):
         listDist.append(MeasureLidar())
-    listDist.sort()
 
-    avgDist = listDist[0]   #not true, lazy programming
-    if avgDist >= 12 and avgDist < 24:
-        numLEDs = 1
-    elif avgDist >= 24 and avgDist < 36:
-        numLEDs = 2
-    elif avgDist >= 36 and avgDist < 48:
-        numLEDs = 3
-    elif avgDist >= 48 and avgDist < 60:
-        numLEDs = 4
-    elif avgDist >= 60 and avgDist < 72:
-        numLEDs = 5
-    elif avgDist >= 72 and avgDist < 84:
-        numLEDs = 6
-    elif avgDist >= 84 and avgDist < 96:
-        numLEDs = 7
-    elif avgDist >= 96 and avgDist < 108:
-        numLEDs = 8
+    #listDist.sort()
 
-    return numLEDs
+    #avgDist = listDist[0]
+    
+    print(listDist)
+
+    last = listDist.pop()
+    for d in listDist:
+    
+        if d < 12 and last < 12:
+            LEDs = 8
+            break
+        elif d >= 12 and d < 24 and last >= 12 and last < 24:
+            LEDs = 7
+            break
+        elif d >= 24 and d < 36 and last >= 24 and last < 36:
+            LEDs = 6
+            break
+        elif d >= 36 and d < 48 and last >= 36 and last < 48:
+            LEDs = 5
+            break
+        elif d >= 48 and d < 60 and last >= 48 and last < 60:
+            LEDs = 4
+            break
+        elif d >= 60 and d < 72 and last >= 60 and last < 72:
+            LEDs = 3
+            break
+        elif d >= 72 and d < 80 and last >= 72 and last < 80:
+            LEDs = 2
+            break
+        elif d >= 80 and d < 100 and last >= 80 and last < 100:
+            LEDs = 1
+            break
 
 # Use BCM GPIO references
 # instead of physical pin numbers
@@ -85,4 +99,13 @@ GPIO.output(GPIO_lidarTrigger, False)
 sleep(0.5)
 
 # --------- main ------
-numLeds = UpdateLidar()
+
+try:
+
+    while True:
+        UpdateLidar()
+        sleep(0.5) # take this out later
+        print("Number of Leds Lighting up:" + str(LEDs))     
+
+except KeyboardInterrupt:
+    GPIO.cleanup()
