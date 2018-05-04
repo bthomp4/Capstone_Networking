@@ -79,7 +79,7 @@ GPIO.output(GPIO_FRONTLEDSel1, False)
 GPIO.output(GPIO_FRONTLEDSel2, False)
 GPIO.output(GPIO_FRONTLEDEn, False)
 
-#FrontLEDs = 0
+FrontLEDs = 0
 
 # ------------------
 # Defining Functions
@@ -168,8 +168,7 @@ def MeasureLidar():
 # This function takes 'n' measurements and
 # returns how many LEDs should be on
 def UpdateLidar():
-    #global FrontLEDs
-    FrontLEDs = 0
+    global FrontLEDs
 
     # Number of Measurements being taken
     n = 3
@@ -256,11 +255,13 @@ while True:
 
     if dictRec[splitPacket[0].decode()] == 'INIT_SYN':
         # send back INIT_SYNACK
+        print("Received INIT_SYN, sending INIT_SYNACK")
         message = dictSend['INIT_SYNACK'] + ',' + MSS_1 + ',' + SN_1 + ',' + VOID_DATA
         
         serverSocket.sendto(message.encode(),clientAddress) 
     elif dictRec[splitPacket[0].decode()] == 'INIT_ACK':
         # Send back MODE_SYN
+        print("Received INIT_ACK, sending MODE_SYN")
         message = dictSend['MODE_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + sys_mode
         serverSocket.sendto(message.encode(),clientAddress)        
 
@@ -273,6 +274,7 @@ while True:
 
         serverSocket.sendto(message.encode(),clientAddress) 
     elif dictRec[splitPacket[0].decode()] == 'FULL_DATA_SYN':
+        print("Received FULL_DATA_SYN")
         
         sys_mode,data_type = splitData(splitPacket[3])
 
@@ -304,6 +306,7 @@ while True:
             serverSocket.sendto(message.encode(),clientAddress)
 
     elif dictRec[splitPacket[0].decode()] == 'SYNC_SYN':
+        print("Received SYNC_SYN")
                 
         data_type,SS = splitData(splitPacket[3])
         SegmentSize = int(SS)
@@ -314,6 +317,7 @@ while True:
         serverSocket.sendto(message.encode(), clientAddress)
 
     elif dictRec[splitPacket[0].decode()] == 'DATA_SYN':
+        print("Received DATA_SYN")
         
         data_type,other_data = splitData(splitPacket[3])
 
@@ -334,6 +338,7 @@ while True:
             serverSocket.sendto(message.encode(), clientAddress)
 
     elif dictRec[splitPacket[0].decode()] == 'DATA_CAM':
+        print("Received DATA_CAM")
 
         # Second element = SS
         SegmentSize = int(splitPacket[1])
