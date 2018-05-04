@@ -52,10 +52,10 @@ GPIO_lidarEcho    = 20
 GPIO_LEDSRIGHT    = 21
 GPIO_LEDSLEFT     = 27
 
-#GPIO_FRONTLEDSel0  = 2
-#GPIO_FRONTLEDSel1  = 14
-#GPIO_FRONTLEDSel2  = 4    #MSB
-#GPIO_FRONTLEDEn    = 17
+GPIO_FRONTLEDSel0  = 2
+GPIO_FRONTLEDSel1  = 14
+GPIO_FRONTLEDSel2  = 4    #MSB
+GPIO_FRONTLEDEn    = 17
 #GPIO_FRONTStatus  = 11
 
 # Set pins as output and input
@@ -65,13 +65,21 @@ GPIO.setup(GPIO_lidarTrigger,GPIO.OUT) # Trigger 1
 GPIO.setup(GPIO_lidarEcho,GPIO.IN)     # Echo 1
 GPIO.setup(GPIO_LEDSRIGHT,GPIO.OUT)
 GPIO.setup(GPIO_LEDSLEFT,GPIO.OUT)
+GPIO.setup(GPIO_FRONTLEDSel0,GPIO.OUT)
+GPIO.setup(GPIO_FRONTLEDSel1,GPIO.OUT)
+GPIO.setup(GPIO_FRONTLEDSel2,GPIO.OUT)
+GPIO.setup(GPIO_FRONTLEDEn,GPIO.OUT)
 
 # Set default values to False (low)
 GPIO.output(GPIO_lidarTrigger,False)
 GPIO.output(GPIO_LEDSRIGHT, False)
 GPIO.output(GPIO_LEDSLEFT, False)
+GPIO.output(GPIO_FRONTLEDSel0, False)
+GPIO.output(GPIO_FRONTLEDSel1, False)
+GPIO.output(GPIO_FRONTLEDSel2, False)
+GPIO.output(GPIO_FRONTLEDEn, False)
 
-LEDs = 0
+#FrontLEDs = 0
 
 # ------------------
 # Defining Functions
@@ -160,7 +168,9 @@ def MeasureLidar():
 # This function takes 'n' measurements and
 # returns how many LEDs should be on
 def UpdateLidar():
-    global LEDs
+    #global FrontLEDs
+    FrontLEDs = 0
+
     # Number of Measurements being taken
     n = 3
 
@@ -171,39 +181,36 @@ def UpdateLidar():
     for i in range(0,n):
         listDist.append(MeasureLidar())
 
-    #listDist.sort()
-
-    #avgDist = listDist[0]
-
     print(listDist)
 
     last = listDist.pop()
     for d in listDist:
 
         if d < 12 and last < 12:
-            LEDs = 8
+            FrontLEDs = 8
             break
         elif d >= 12 and d < 24 and last >= 12 and last < 24:
-            LEDs = 7
+            FrontLEDs = 7
             break
         elif d >= 24 and d < 36 and last >= 24 and last < 36:
-            LEDs = 6
+            FrontLEDs = 6
             break
         elif d >= 36 and d < 48 and last >= 36 and last < 48:
-            LEDs = 5
+            FrontLEDs = 5
             break
         elif d >= 48 and d < 60 and last >= 48 and last < 60:
-            LEDs = 4
+            FrontLEDs = 4
             break
         elif d >= 60 and d < 72 and last >= 60 and last < 72:
-            LEDs = 3
+            FrontLEDs = 3
             break
         elif d >= 72 and d < 80 and last >= 72 and last < 80:
-            LEDs = 2
+            FrontLEDs = 2
             break
         elif d >= 80 and d < 100 and last >= 80 and last < 100:
-            LEDs = 1
+            FrontLEDs = 1
             break
+    return FrontLEDs
 
 # ---------------
 # Main Script
@@ -349,6 +356,55 @@ while True:
     
         LS,RS = splitData(splitPacket[3])
 
+        numLEDs = UpdateLidar()
+        
+        if numLEDs == 0:
+            GPIO.output(GPIO_FRONTLEDSel0, False)
+            GPIO.output(GPIO_FRONTLEDSel1, False)
+            GPIO.output(GPIO_FRONTLEDSel2, False)
+            GPIO.output(GPIO_FRONTLEDEn, False)
+        elif numLEDs == 1:
+            GPIO.output(GPIO_FRONTLEDSel0, False)
+            GPIO.output(GPIO_FRONTLEDSel1, False)
+            GPIO.output(GPIO_FRONTLEDSel2, False)
+            GPIO.output(GPIO_FRONTLEDEn, True)
+        elif numLEDs == 2:
+            GPIO.output(GPIO_FRONTLEDSel0, True)
+            GPIO.output(GPIO_FRONTLEDSel1, False)
+            GPIO.output(GPIO_FRONTLEDSel2, False)
+            GPIO.output(GPIO_FRONTLEDEn, True)
+        elif numLEDs == 3:
+            GPIO.output(GPIO_FRONTLEDSel0, False)
+            GPIO.output(GPIO_FRONTLEDSel1, True)
+            GPIO.output(GPIO_FRONTLEDSel2, False)
+            GPIO.output(GPIO_FRONTLEDEn, True)
+        elif numLEDs == 4:
+            GPIO.output(GPIO_FRONTLEDSel0, True)
+            GPIO.output(GPIO_FRONTLEDSel1, True)
+            GPIO.output(GPIO_FRONTLEDSel2, False)
+            GPIO.output(GPIO_FRONTLEDEn, True)
+        elif numLEDs == 5:
+            GPIO.output(GPIO_FRONTLEDSel0, False)
+            GPIO.output(GPIO_FRONTLEDSel1, False)
+            GPIO.output(GPIO_FRONTLEDSel2, True)
+            GPIO.output(GPIO_FRONTLEDEn, True)
+        elif numLEDs == 6:
+            GPIO.output(GPIO_FRONTLEDSel0, True)
+            GPIO.output(GPIO_FRONTLEDSel1, False)
+            GPIO.output(GPIO_FRONTLEDSel2, True)
+            GPIO.output(GPIO_FRONTLEDEn, True)
+        elif numLEDs == 7:
+            GPIO.output(GPIO_FRONTLEDSel0, False)
+            GPIO.output(GPIO_FRONTLEDSel1, True)
+            GPIO.output(GPIO_FRONTLEDSel2, True)
+            GPIO.output(GPIO_FRONTLEDEn, True)
+        elif numLEDs == 8:
+            GPIO.output(GPIO_FRONTLEDSel0, True)
+            GPIO.output(GPIO_FRONTLEDSel1, True)
+            GPIO.output(GPIO_FRONTLEDSel2, True)
+            GPIO.output(GPIO_FRONTLEDEn, True)
+
+        # Lighting up LEDs for Side Sensors
         if RS == "Y": 
             GPIO.output(GPIO_LEDSRIGHT,True)
             print("Turn Right LEDS ON")
