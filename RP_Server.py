@@ -13,6 +13,78 @@ import sys
 import RPi.GPIO as GPIO
 
 # ------------------
+# Defining Variables
+# ------------------
+
+# Set variables
+HasLost = False
+VOID_DATA = "VOID"
+
+# Default Picture is our Logo
+picture = "test_decode.jpg"
+logo = "logo.jpg"
+
+# array to hold encoded string from client
+encode_string = []
+
+# Max Segment Size
+MSS   = 9999
+MSS_1 = "0001"
+SN_1  = "0001"
+
+# where packets need to be checked for loss
+check_pt = 0
+
+# List for storing which packets have been received
+packetsRec = [0] * MSS
+
+# Dictionaries for Flag Values
+dictRec = {'0':'INIT_SYN','1':'INIT_SYNACK','2':'INIT_ACK','3':'FULL_DATA_SYN','4':'FULL_DATA_ACK','5':'SYNC_SYN','6':'SYNC_ACK','7':'DATA_SYN','8':'DATA_ACK','9':'DATA_CAM','A':'DATA_SEN','B':'MODE_SYN','C':'MODE_ACK'}
+
+dictSend = {'INIT_SYN':'0','INIT_SYNACK':'1','INIT_ACK':'2','FULL_DATA_SYN':'3','FULL_DATA_ACK':'4','SYNC_SYN':'5','SYNC_ACK':'6','DATA_SYN':'7','DATA_ACK':'8','DATA_CAM':'9','DATA_SEN':'A','MODE_SYN':'B','MODE_ACK':'C'}
+
+# GPIO pins (BCM) and their purpose
+GPIO.setmode(GPIO.BCM)
+
+GPIO_ModeSel    = 16
+
+GPIO_lidarTrigger    = 23
+GPIO_lidarEcho       = 20
+GPIO_LEDSRIGHT       = 21
+GPIO_LEDSLEFT        = 27
+
+#  For Lidar Sensor
+GPIO_FRONTLEDSEL0 = 2
+GPIO_FRONTLEDSEL1 = 14
+GPIO_FRONTLEDSEL2 = 4    # MSB
+GPIO_FRONTLEDEn   = 17
+GPIO_LED_STATUS   = 11
+
+# Set pins as output and input
+GPIO.setup(GPIO_ModeSel,GPIO.IN)
+
+GPIO.setup(GPIO_lidarTrigger, GPIO.OUT)
+GPIO.setup(GPIO_lidarEcho,GPIO.IN)
+GPIO.setup(GPIO_LEDSRIGHT,GPIO.OUT)
+GPIO.setup(GPIO_LEDSLEFT,GPIO.OUT)
+
+GPIO.setup(GPIO_FRONTLEDSel0,GPIO.OUT)
+GPIO.setup(GPIO_FRONTLEDSel1,GPIO.OUT)
+GPIO.setup(GPIO_FRONTLEDSel2,GPIO.OUT)
+GPIO.setup(GPIO_FRONTLEDEn,GPIO.OUT)
+
+# Set default values to False (low)
+GPIO.output(GPIO_lidarTrigger,False)
+GPIO.output(GPIO_LEDSRIGHT, False)
+GPIO.output(GPIO_LEDSLEFT, False)
+GPIO.output(GPIO_FRONTLEDSel0, False)
+GPIO.output(GPIO_FRONTLEDSel1, False)
+GPIO.output(GPIO_FRONTLEDSel2, False)
+GPIO.output(GPIO_FRONTLEDEn, False)
+
+FrontLEDs = 0
+
+# ------------------
 # Defining Functions
 # ------------------
 
@@ -69,66 +141,84 @@ def splitData(data):
 
     return data1, data2
 
+# ------------------------------------------------
+# MeasureLidar takes measurement to nearest object
+# in front of the rider. Returns the distance to
+# that object
+# ------------------------------------------------
+def MeasureLidar():
+    # This function measures a distance
+    GPIO.output(GPIO_lidarTrigger, True)
+    # Wait 10us
+    sleep(0.00001) # this is needed
+    GPIO.output(GPIO_lidarTrigger, False)
+    start = time()
+
+    while GPIO.input(GPIO_lidarEcho) == 0:
+        start = time()
+
+    while GPIO.input(GPIO_lidarEcho) == 1:
+        stop = time()
+
+    stop = time()
+
+    elapsed = stop - start # every 10 microseconds = 1 cm
+    distance = elapsed * (10  ** 5) # in cm
+    distance = distance  * 0.0328084 # in feet
+
+    return distance
+
+# This function takes 'n' measurements and
+# returns how many LEDs should be on
+def UpdateLidar():
+    global FrontLEDs
+
+    # Number of Measurements being taken
+    n = 3
+
+    # Initialized to zero
+
+    listDist = []
+    for i in range(0,n):
+        listDist.append(MeasureLidar())
+
+    print(listDist)
+
+    last = listDist.pop()
+    for d in listDist:
+
+        if d < 12 and last < 12:
+            FrontLEDs = 8
+            break
+        elif d >= 12 and d < 24 and last >= 12 and last < 24:
+            FrontLEDs = 7
+            break
+        elif d >= 24 and d < 36 and last >= 24 and last < 36:
+            FrontLEDs = 6
+            break
+        elif d >= 36 and d < 48 and last >= 36 and last < 48:
+            FrontLEDs = 5
+            break
+        elif d >= 48 and d < 60 and last >= 48 and last < 60:
+            FrontLEDs = 4
+            break
+        elif d >= 60 and d < 72 and last >= 60 and last < 72:
+            FrontLEDs = 3
+            break
+        elif d >= 72 and d < 80 and last >= 72 and last < 80:
+            FrontLEDs = 2
+            break
+        elif d >= 80 and d < 100 and last >= 80 and last < 100:
+            FrontLEDs = 1
+            break
+    return FrontLEDs
+
 # ---------------
 # Main Script
 # ---------------
 
-# Set variables
-HasLost = False
-VOID_DATA = "VOID"
-
-# Default Picture is our Logo
-picture = "test_decode.jpg"
-logo = "logo.jpg"
-
-# array to hold encoded string from client
-encode_string = []
-
-# Max Segment Size
-MSS   = 9999
-MSS_1 = "0001"
-SN_1  = "0001"
-
-# where packets need to be checked for loss
-check_pt = 0
-
-# List for storing which packets have been received
-packetsRec = [0] * MSS
-
-# Dictionaries for Flag Values
-dictRec = {'0':'INIT_SYN','1':'INIT_SYNACK','2':'INIT_ACK','3':'FULL_DATA_SYN','4':'FULL_DATA_ACK','5':'SYNC_SYN','6':'SYNC_ACK','7':'DATA_SYN','8':'DATA_ACK','9':'DATA_CAM','A':'DATA_SEN','B':'MODE_SYN','C':'MODE_ACK'}
-
-dictSend = {'INIT_SYN':'0','INIT_SYNACK':'1','INIT_ACK':'2','FULL_DATA_SYN':'3','FULL_DATA_ACK':'4','SYNC_SYN':'5','SYNC_ACK':'6','DATA_SYN':'7','DATA_ACK':'8','DATA_CAM':'9','DATA_SEN':'A','MODE_SYN':'B','MODE_ACK':'C'}
-
-# GPIO pins (BCM) and their purpose
-GPIO.setmode(GPIO.BCM)
-
-GPIO_ModeSel    = 16
-
-GPIO_TRIGGER    = 23
-GPIO_ECHO       = 20
-GPIO_LEDSRIGHT  = 21
-GPIO_LEDSLEFT   = 27
-
-#  For Lidar Sensor
-#GPIO_FRONT_LED_SEL0 = 2
-#GPIO_FRONT_LED_SEL1 = 14
-#GPIO_FRONT_LED_SEL2 = 4    # MSB
-#GPIO_FRONT_EN       = 17
-#GPIO_LED_STATUS     = 11
-
-# Set pins as output and input
-GPIO.setup(GPIO_ModeSel,GPIO.IN)
-
-GPIO.setup(GPIO_TRIGGER, GPIO.OUT)
-GPIO.setup(GPIO_ECHO,GPIO.IN)
-GPIO.setup(GPIO_LEDSRIGHT,GPIO.OUT)
-GPIO.setup(GPIO_LEDSLEFT,GPIO.OUT)
-
-# Set default values to False (low)
-GPIO.output(GPIO_TRIGGER,False)
-GPIO.output(GPIO_LEDSRIGHT, False)
-GPIO.output(GPIO_LEDSLEFT, False)
+# Allow for time for setting up GPIO
+sleep(0.5)
 
 # Setting up socket
 server_port = 12000
@@ -259,6 +349,54 @@ while True:
     elif dictRec[splitPacket[0].decode()] == 'DATA_SEN':
         # handle the sensor data
         LS,RS = splitData(splitPacket[3])
+
+        numLEDs = UpdateLidar()
+
+        if numLEDs == 0:
+            GPIO.output(GPIO_FRONTLEDSel0, False)
+            GPIO.output(GPIO_FRONTLEDSel1, False)
+            GPIO.output(GPIO_FRONTLEDSel2, False)
+            GPIO.output(GPIO_FRONTLEDEn, False)
+        elif numLEDs == 1:
+            GPIO.output(GPIO_FRONTLEDSel0, False)
+            GPIO.output(GPIO_FRONTLEDSel1, False)
+            GPIO.output(GPIO_FRONTLEDSel2, False)
+            GPIO.output(GPIO_FRONTLEDEn, True)
+        elif numLEDs == 2:
+            GPIO.output(GPIO_FRONTLEDSel0, True)
+            GPIO.output(GPIO_FRONTLEDSel1, False)
+            GPIO.output(GPIO_FRONTLEDSel2, False)
+            GPIO.output(GPIO_FRONTLEDEn, True)
+        elif numLEDs == 3:
+            GPIO.output(GPIO_FRONTLEDSel0, False)
+            GPIO.output(GPIO_FRONTLEDSel1, True)
+            GPIO.output(GPIO_FRONTLEDSel2, False)
+            GPIO.output(GPIO_FRONTLEDEn, True)
+        elif numLEDs == 4:
+            GPIO.output(GPIO_FRONTLEDSel0, True)
+            GPIO.output(GPIO_FRONTLEDSel1, True)
+            GPIO.output(GPIO_FRONTLEDSel2, False)
+            GPIO.output(GPIO_FRONTLEDEn, True)
+        elif numLEDs == 5:
+            GPIO.output(GPIO_FRONTLEDSel0, False)
+            GPIO.output(GPIO_FRONTLEDSel1, False)
+            GPIO.output(GPIO_FRONTLEDSel2, True)
+            GPIO.output(GPIO_FRONTLEDEn, True)
+        elif numLEDs == 6:
+            GPIO.output(GPIO_FRONTLEDSel0, True)
+            GPIO.output(GPIO_FRONTLEDSel1, False)
+            GPIO.output(GPIO_FRONTLEDSel2, True)
+            GPIO.output(GPIO_FRONTLEDEn, True)
+        elif numLEDs == 7:
+            GPIO.output(GPIO_FRONTLEDSel0, False)
+            GPIO.output(GPIO_FRONTLEDSel1, True)
+            GPIO.output(GPIO_FRONTLEDSel2, True)
+            GPIO.output(GPIO_FRONTLEDEn, True)
+        elif numLEDs == 8:
+            GPIO.output(GPIO_FRONTLEDSel0, True)
+            GPIO.output(GPIO_FRONTLEDSel1, True)
+            GPIO.output(GPIO_FRONTLEDSel2, True)
+            GPIO.output(GPIO_FRONTLEDEn, True)
 
         if RS == "Y":
             GPIO.output(GPIO_LEDSRIGHT,True)
