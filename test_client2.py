@@ -12,6 +12,38 @@ from PIL import Image
 
 from time import *
 
+# ------------------
+# Defining Variables
+# ------------------
+
+# Set file names
+picture = "tempPic.jpg"
+scaledPic = "pic_scaled.jpg"
+
+# Set variables
+DATA_SIZE   = 500
+MSS_1       = "0001"
+SN_1        = "0001"
+VOID_DATA   = "VOID"
+SS_FlagSize = 4
+SN_FlagSize = 4
+
+# Dictionaries for Flag Values
+dictRec = {'0':'INIT_SYN','1':'INIT_SYNACK','2':'INIT_ACK','3':'FULL_DATA_SYN','4':'FULL_DATA_ACK','5':'SYNC_SYN','6':'SYNC_ACK','7':'DATA_SYN','8':'DATA_ACK','9':'DATA_CAM','A':'DATA_SEN','B':'MODE_SYN','C':'MODE_ACK'}
+
+dictSend = {'INIT_SYN':'0','INIT_SYNACK':'1','INIT_ACK':'2','FULL_DATA_SYN':'3','FULL_DATA_ACK':'4','SYNC_SYN':'5','SYNC_ACK':'6','DATA_SYN':'7','DATA_ACK':'8','DATA_CAM':'9','DATA_SEN':'A','MODE_SYN':'B','MODE_ACK':'C'}
+
+# check point divider value
+cp = 8
+
+drop_packets = []
+
+# initialize encode_msgs list
+encode_msgs = []
+
+# for the mode of the system, FB or BS
+sys_mode = " "
+
 # -------------------
 # Defining Functions
 # -------------------
@@ -57,34 +89,6 @@ def splitData(data):
 # ---------------
 # Main Script
 # ---------------
-
-# Set file names
-picture = "tempPic.jpg"
-scaledPic = "pic_scaled.jpg"
-
-# Set variables
-DATA_SIZE   = 500
-MSS_1       = "0001"
-SN_1        = "0001"
-VOID_DATA   = "VOID"
-SS_FlagSize = 4
-SN_FlagSize = 4
-
-# Dictionaries for Flag Values
-dictRec = {'0':'INIT_SYN','1':'INIT_SYNACK','2':'INIT_ACK','3':'FULL_DATA_SYN','4':'FULL_DATA_ACK','5':'SYNC_SYN','6':'SYNC_ACK','7':'DATA_SYN','8':'DATA_ACK','9':'DATA_CAM','A':'DATA_SEN','B':'MODE_SYN','C':'MODE_ACK'}
-
-dictSend = {'INIT_SYN':'0','INIT_SYNACK':'1','INIT_ACK':'2','FULL_DATA_SYN':'3','FULL_DATA_ACK':'4','SYNC_SYN':'5','SYNC_ACK':'6','DATA_SYN':'7','DATA_ACK':'8','DATA_CAM':'9','DATA_SEN':'A','MODE_SYN':'B','MODE_ACK':'C'}
-
-# check point divider value
-cp = 8
-
-drop_packets = []
-
-# initialize encode_msgs list
-encode_msgs = []
-
-# for the mode of the system, FB or BS
-sys_mode = " "
 
 server_port = 12000
 client_socket = socket(AF_INET,SOCK_DGRAM)
