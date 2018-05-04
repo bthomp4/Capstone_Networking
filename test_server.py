@@ -225,7 +225,7 @@ serverSocket.bind(('',serverPort))
 print("The server is ready to recieve")
 
 def signal_handler(signal,frame):
-    #GPIO.cleanup()
+    GPIO.cleanup()
     serverSocket.close()
     sys.exit(0)
 
