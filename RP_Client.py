@@ -17,109 +17,9 @@ import RPi.GPIO as GPIO
 
 from picamera import PiCamera
 
-# -------------------
-# Defining Functions
-# -------------------
-
-# --------------------------------------------------
-# measure1 takes a measurement from the first sensor
-# --------------------------------------------------
-def measureLeft():
-    # This function measures a distance
-    GPIO.output(GPIO_TRIGGER1,True)
-    # Wait 10us
-    sleep(0.00001)
-    GPIO.output(GPIO_TRIGGER1,False)
-    start = time()
-
-    while GPIO.input(GPIO_ECHO1)==0:
-        start = time()
-
-    while GPIO.input(GPIO_ECHO1)==1:
-        stop = time()
-
-    elapsed = stop-start
-    distance = (elapsed * speedSound/2)
-
-    return distance
-
-# ---------------------------------------------------
-# measure2 takes a measurement from the second sensor
-# ---------------------------------------------------
-def measureRight():
-    # This function measures a distance
-    GPIO.output(GPIO_TRIGGER2,True)
-    # Wait 10us
-    sleep(0.00001)
-    GPIO.output(GPIO_TRIGGER2,False)
-    start = time()
-
-    while GPIO.input(GPIO_ECHO2)==0:
-        start = time()
-
-    while GPIO.input(GPIO_ECHO2)==1:
-        stop = time()
-
-    elapsed = stop-start
-    distance = (elapsed * speedSound)/2
-
-    return distance
-
-# -----------
-# encodeImage
-# -----------
-def encodeImage():
-    # Compress the image
-    cam_pic = Image.open(picture)
-
-    cam_pic = cam_pic.resize((800,480),Image.ANTIALIAS)
-    cam_pic.save(scaledPic,quality=20)
-
-    with open(scaledPic,'rb') as image:
-        image_64_encode = base64.encodestring(image.read())
-
-    return image_64_encode
-
-# ------------------------------------------------------------------
-# UpdateSideSensors updates the sensor values and returns the values
-# ------------------------------------------------------------------
-def UpdateSideSensors():
-
-    # Set trigger to False (Low)
-    GPIO.output(GPIO_TRIGGER1,False)
-    GPIO.output(GPIO_TRIGGER2,False)
-
-    n = 3
-    numPingRight = 0
-    numPingLeft = 0
-    flagRight = "N"
-    flagLeft = "N"
-    for i in range( 0,n ):
-        if (measureLeft() < 120):
-            numPingLeft = numPingLeft + 1
-        if (measureRight() < 120):
-            numPingRight = numPingRight + 1
-    if ( numPingLeft > (n/2) ):
-        flagLeft = "Y"
-    if ( numPingRight > (n/2) ):
-        flagRight = "Y"
-
-    return flagLeft, flagRight
-
-# --------------------------------------------
-# splitData is used to split data based on '!'
-# --------------------------------------------
-def splitData(data):
-    data_decoded = data.decode()
-    newData = data_decoded.split('!')
-    data1 = newData[0]
-    data2 = newData[1]
-
-    return data1, data2
-
-# ---------------
-# Main Script
-# ---------------
+# ------------------
+# Defining Variables
+# ------------------
 
 # Use BCM GPIO references
 # instead of physical pin numbers
@@ -170,6 +70,122 @@ encode_msgs = []
 
 # for the mode of the system, FB or BS
 sys_mode = " "
+
+# -------------------
+# Defining Functions
+# -------------------
+
+# --------------------------------------------------
+# MeasureLeft takes a measurement from the left sensor
+# --------------------------------------------------
+def MeasureLeft():
+    # This function measures a distance
+    GPIO.output(GPIO_TRIGGER1,True)
+    # Wait 10us
+    sleep(0.00001)
+    GPIO.output(GPIO_TRIGGER1,False)
+    start = time()
+
+    while GPIO.input(GPIO_ECHO1)==0:
+        start = time()
+
+    while GPIO.input(GPIO_ECHO1)==1:
+        stop = time()
+
+    stop = time()
+
+    elapsed = stop-start
+    distance = (elapsed * speedSound/2)
+
+    return distance
+
+# ---------------------------------------------------
+# MeasureRight takes a measurement from the right sensor
+# ---------------------------------------------------
+def MeasureRight():
+    # This function measures a distance
+    GPIO.output(GPIO_TRIGGER2,True)
+    # Wait 10us
+    sleep(0.00001)
+    GPIO.output(GPIO_TRIGGER2,False)
+    start = time()
+
+    while GPIO.input(GPIO_ECHO2)==0:
+        start = time()
+
+    while GPIO.input(GPIO_ECHO2)==1:
+        stop = time()
+
+    stop = time()
+
+    elapsed = stop-start
+    distance = (elapsed * speedSound)/2
+
+    return distance
+
+# -----------
+# encodeImage
+# -----------
+def encodeImage():
+    # Compress the image
+    cam_pic = Image.open(picture)
+
+    cam_pic = cam_pic.resize((800,480),Image.ANTIALIAS)
+    cam_pic.save(scaledPic,quality=20)
+
+    with open(scaledPic,'rb') as image:
+        image_64_encode = base64.encodestring(image.read())
+
+    return image_64_encode
+
+# ------------------------------------------------------------------
+# UpdateSideSensors updates the sensor values and returns the values
+# ------------------------------------------------------------------
+def UpdateSideSensors():
+
+    # Set trigger to False (Low)
+    GPIO.output(GPIO_TRIGGER1,False)
+    GPIO.output(GPIO_TRIGGER2,False)
+
+    n = 3
+    numPingRight = 0
+    numPingLeft = 0
+    flagRight = "N"
+    flagLeft = "N"
+
+    for i in range( 0,n ):
+        leftMeasure = MeasureLeft()
+        if (leftMeasure < 120):
+            print(str(i) + "Left Measure" + str(leftMeasure))
+            numPingLeft = numPingLeft + 1
+        rightMeasure = MeasureRight()
+        if (rightMeasure < 120):
+            print(str(i) + "Right Measure" + str(rightMeasure))
+            numPingRight = numPingRight + 1
+    if ( numPingLeft > (n/2) ):
+        flagLeft = "Y"
+    if ( numPingRight > (n/2) ):
+        flagRight = "Y"
+
+    return flagLeft, flagRight
+
+# --------------------------------------------
+# splitData is used to split data based on '!'
+# --------------------------------------------
+def splitData(data):
+    data_decoded = data.decode()
+    newData = data_decoded.split('!')
+    data1 = newData[0]
+    data2 = newData[1]
+
+    return data1, data2
+
+# ---------------
+# Main Script
+# ---------------
+
+# Allow time for GPIO to set up
+sleep(0.5)
 
 server_port = 12000
 client_socket = socket(AF_INET,SOCK_DGRAM)
