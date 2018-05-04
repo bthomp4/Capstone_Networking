@@ -10,7 +10,7 @@ from time import *
 import signal
 import sys
 
-#import RPi.GPIO as GPIO
+import RPi.GPIO as GPIO
 
 # ------------------
 # Defining Variables
