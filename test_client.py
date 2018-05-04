@@ -17,6 +17,59 @@ import RPi.GPIO as GPIO
 
 from picamera import PiCamera
 
+# ------------------
+# Defining Variables
+# ------------------
+
+# Use BCM GPIO references
+# instead of physical pin numbers
+GPIO.setmode(GPIO.BCM)
+
+# Define GPIO to use on Pi
+GPIO_TRIGGER1 = 23
+GPIO_ECHO1    = 24
+GPIO_TRIGGER2 = 5
+GPIO_ECHO2    = 6
+
+# Speed of sound in in/s at temperature
+speedSound = 13500 # in/s
+
+# Set pins as output and input
+GPIO.setup(GPIO_TRIGGER1,GPIO.OUT) # Trigger 1
+GPIO.setup(GPIO_ECHO1,GPIO.IN)     # Echo 1
+GPIO.setup(GPIO_TRIGGER2,GPIO.OUT) # Trigger 2
+GPIO.setup(GPIO_ECHO2,GPIO.IN)     # ECHO 2
+
+# Set trigger to False (Low)
+GPIO.output(GPIO_TRIGGER1, False)
+GPIO.output(GPIO_TRIGGER2, False)
+
+# Set file names
+picture = "test.jpg"
+
+# Set variables
+DATA_SIZE   = 500
+MSS_1       = "0001"
+SN_1        = "0001"
+VOID_DATA   = "VOID"
+SS_FlagSize = 4
+SN_FlagSize = 4
+DCNT_flag   = 0
+
+# Dictionaries for Flag Values
+dictRec = {'0':'INIT_SYN','1':'INIT_SYNACK','2':'INIT_ACK','3':'FULL_DATA_SYN','4':'FULL_DATA_ACK','5':'SYNC_SYN','6':'SYNC_ACK','7':'DATA_SYN','8':'DATA_ACK','9':'DATA_CAM','A':'DATA_SEN','B':'MODE_SYN','C':'MODE_ACK'}
+
+dictSend = {'INIT_SYN':'0','INIT_SYNACK':'1','INIT_ACK':'2','FULL_DATA_SYN':'3','FULL_DATA_ACK':'4','SYNC_SYN':'5','SYNC_ACK':'6','DATA_SYN':'7','DATA_ACK':'8','DATA_CAM':'9','DATA_SEN':'A','MODE_SYN':'B','MODE_ACK':'C'}
+
+# check point divider value
+cp = 1
+
+# initialize encode_msgs list
+encode_msgs = []
+
+# for the mode of the system, FB or BS
+sys_mode = " "
+
 # -------------------
 # Defining Functions
 # -------------------
@@ -130,73 +183,7 @@ def splitData(data):
 # Main Script
 # ---------------
 
-# Use BCM GPIO references
-# instead of physical pin numbers
-GPIO.setmode(GPIO.BCM)
-
-# Define GPIO to use on Pi
-GPIO_TRIGGER1 = 23
-GPIO_ECHO1    = 24
-GPIO_TRIGGER2 = 5
-GPIO_ECHO2    = 6
-
-# for testing the LEDS in rear (temporarily)
-GPIO_LEDSRIGHT = 21
-GPIO_LEDSLEFT  = 27
-# ------
-
-# Speed of sound in in/s at temperature
-speedSound = 13500 # in/s
-
-# Set pins as output and input
-GPIO.setup(GPIO_TRIGGER1,GPIO.OUT) # Trigger 1
-GPIO.setup(GPIO_ECHO1,GPIO.IN)     # Echo 1
-GPIO.setup(GPIO_TRIGGER2,GPIO.OUT) # Trigger 2
-GPIO.setup(GPIO_ECHO2,GPIO.IN)     # ECHO 2
-
-# for testing the LEDS in rear (temporarily)
-GPIO.setup(GPIO_LEDSRIGHT,GPIO.OUT)
-GPIO.setup(GPIO_LEDSLEFT,GPIO.OUT)
-# ------
-
-# Set trigger to False (Low)
-GPIO.output(GPIO_TRIGGER1, False)
-GPIO.output(GPIO_TRIGGER2, False)
-
-# for testing the LEDS in rear (temporarily)
-GPIO.output(GPIO_LEDSRIGHT, False)
-GPIO.output(GPIO_LEDSLEFT, False)
-# -------
-
 sleep(0.5)
-
-# Set file names
-picture = "test.jpg"
-
-# Set variables
-DATA_SIZE   = 500
-MSS_1       = "0001"
-SN_1        = "0001"
-VOID_DATA   = "VOID"
-SS_FlagSize = 4
-SN_FlagSize = 4
-DCNT_flag   = 0
-
-# Dictionaries for Flag Values
-dictRec = {'0':'INIT_SYN','1':'INIT_SYNACK','2':'INIT_ACK','3':'FULL_DATA_SYN','4':'FULL_DATA_ACK','5':'SYNC_SYN','6':'SYNC_ACK','7':'DATA_SYN','8':'DATA_ACK','9':'DATA_CAM','A':'DATA_SEN','B':'MODE_SYN','C':'MODE_ACK'}
-
-dictSend = {'INIT_SYN':'0','INIT_SYNACK':'1','INIT_ACK':'2','FULL_DATA_SYN':'3','FULL_DATA_ACK':'4','SYNC_SYN':'5','SYNC_ACK':'6','DATA_SYN':'7','DATA_ACK':'8','DATA_CAM':'9','DATA_SEN':'A','MODE_SYN':'B','MODE_ACK':'C'}
-
-# check point divider value
-cp = 1
-
-# initialize encode_msgs list
-encode_msgs = []
-
-# for the mode of the system, FB or BS
-sys_mode = " "
-
-#camera = PiCamera()
 
 server_port = 12000
 client_socket = socket(AF_INET,SOCK_DGRAM)
@@ -311,29 +298,6 @@ while True:
         elif data_type == "SEN":
             # Send DATA_SEN message
             LS, RS = UpdateSideSensors()
-
-            # Here Temporarily, will only exist in front unit in future
-            # -----------------------------------------------
-            print("===Ultrasonic Test===")
-            print("LS: " + str(LS) + "\t\tRS: " + str(RS))
-
-            if RS == "Y": #if w/i 120in or 10ft
-                GPIO.output(GPIO_LEDSRIGHT,True)
-                print("Turn Right LEDS ON")
-            else:
-                GPIO.output(GPIO_LEDSRIGHT,False)
-                print("Turn Right LEDS OFF")
-            if LS == "Y":
-                GPIO.output(GPIO_LEDSLEFT,True)
-                print("Turn LEFT LEDS ON")
-            else:
-                GPIO.output(GPIO_LEDSLEFT,False)
-                print("Turn LEFT LEDS OFF")
-            # -----------------------------------------------
-            # Testing LiDAR code
-            # -----------------------------------------------
-            #print("=====LiDAR Test=====")
-            #print( "\tNumber of LEDs: " + str(UpdateLidar()) )
 
             msg_data = LS + '!' + RS
 
