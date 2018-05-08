@@ -200,6 +200,7 @@ def signal_handler(signal,frame):
 signal.signal(signal.SIGINT, signal_handler)
 
 # sending a message to initialize connection
+print("Sending INIT_SYN")
 message = dictSend['INIT_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + VOID_DATA
 
 client_socket.sendto(message.encode(),(args.server_name,server_port))
@@ -212,23 +213,30 @@ while True:
 
     if dictRec[splitPacket[0].decode()] == 'INIT_SYNACK':
         # send back an INIT_ACK
+        print("Received INIT_SYNACK, sending INIT_ACK")
         message = dictSend['INIT_ACK'] + ',' + MSS_1 + ',' + SN_1 + ',' + VOID_DATA
         client_socket.sendto(message.encode(),(args.server_name,server_port))
     elif dictRec[splitPacket[0].decode()] == 'MODE_SYN':
         # Send back MODE_ACK
+        print("Received MODE_SYN")
         sys_mode = splitPacket[3].decode()
 
         # When in Full Battery Mode, turn on Camera
         if (sys_mode == "FB"):
+            print("Turn on Camera")
             camera = PiCamera()
 
+        print("Sending MODE_ACK")
         message = dictSend['MODE_ACK'] + ',' + MSS_1 + ',' + SN_1 + ',' + sys_mode
         client_socket.sendto(message.encode(),(args.server_name,server_port))
     elif dictRec[splitPacket[0].decode()] == 'SYNC_ACK':
 
+        print("Received SYNC_ACK")
+
         data_type,SS = splitData(splitPacket[3])
 
         if data_type == "CAM":
+            print("Handling Camera Data")
             packet_count = 0
             num_packet = 0
 
@@ -296,6 +304,7 @@ while True:
             message = dictSend['FULL_DATA_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + msg_data
             client_socket.sendto(message.encode(),(args.server_name,server_port))
         elif data_type == "SEN":
+            print("Handling Sensor Data")
             # Send DATA_SEN message
             LS, RS = UpdateSideSensors()
 
@@ -305,18 +314,23 @@ while True:
             client_socket.sendto(message.encode(), (args.server_name,server_port))
 
             # Send DATA_SYN
+            print("Sending Data_SYN")
             message = dictSend['DATA_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + "SEN!VOID"
             client_socket.sendto(message.encode(), (args.server_name,server_port))
 
             # Wait for DATA_ACK from Server
+            print("Receiving DATA_ACK")
             response,serverAddress = client_socket.recvfrom(2048)
 
             # Then send a FULL_DATA_SYN
             msg_data = sys_mode + '!' + "SEN"
+            print("Sending FULL_DATA_SYN")
             message = dictSend['FULL_DATA_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + msg_data
             client_socket.sendto(message.encode(), (args.server_name,server_port))
 
     elif dictRec[splitPacket[0].decode()] == 'FULL_DATA_ACK':
+
+        print("Receiving FULL_DATA_ACK")
 
         sys_mode,data_type = splitData(splitPacket[3])
 
@@ -324,6 +338,7 @@ while True:
             # Sending both camera and sensor data
 
             if data_type == "VOID" or data_type == "SEN":
+                print("Taking Picture")
                 camera.capture(picture)
 
                 string = encodeImage()
@@ -349,10 +364,12 @@ while True:
                 client_socket.sendto(message.encode(), (args.server_name,server_port))
             elif data_type == "CAM":
                 # send SYNC_SYN for SENSOR
+                print("Sending SYNC_SYN for Sensor DATA")
 
                 message = dictSend['SYNC_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + "SEN!1"
                 client_socket.sendto(message.encode(), (args.server_name,server_port))
         elif sys_mode == "BS":
+            print("in BS mode, Sending SYNC_SYN for Sensor Data")
             # Only sending sensor data since display is turned off
             message = dictSend['SYNC_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + "SEN!1"
             client_socket.sendto(message.encode(), (args.server_name,server_port))
