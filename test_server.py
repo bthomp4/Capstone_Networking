@@ -34,6 +34,9 @@ SN_1  = "0001"
 # where packets need to be checked for loss
 check_pt = 0
 
+# value of where packets will be checked
+cp_value = 1
+
 # List for storing which packets have been received
 packetsRec = [0] * MSS
 
@@ -114,7 +117,7 @@ def check_point(SegmentSize):
 
     print("Check_Pt: " + str(check_pt))
     packet_dropped = -1
-    for i in range (check_pt,(check_pt + (SegmentSize//8))):
+    for i in range (check_pt,(check_pt + (SegmentSize//cp_value))):
         if packetsRec[i] == 0:
             packet_dropped = i
             break
@@ -330,7 +333,7 @@ while True:
        
             if (packet_dropped == -1):
                 HasLost = False
-                check_pt = check_pt + (SegmentSize//8) 
+                check_pt = check_pt + (SegmentSize//cp_value) 
             else:
                 HasLost = True
         elif data_type == "SEN":
