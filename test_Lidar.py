@@ -104,7 +104,6 @@ try:
 
     while True:
         UpdateLidar()
-        sleep(0.5) # take this out later
         print("Number of Leds Lighting up:" + str(LEDs))     
 
 except KeyboardInterrupt:
