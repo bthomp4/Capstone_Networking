@@ -15,8 +15,6 @@ from time import *
 # for GPIO Pins (can only be tested on RPi)
 import RPi.GPIO as GPIO
 
-from picamera import PiCamera
-
 # ------------------
 # Defining Variables
 # ------------------
@@ -26,23 +24,23 @@ from picamera import PiCamera
 GPIO.setmode(GPIO.BCM)
 
 # Define GPIO to use on Pi
-GPIO_TRIGGER1 = 23
-GPIO_ECHO1    = 24
-GPIO_TRIGGER2 = 5
-GPIO_ECHO2    = 6
+GPIO_TRIGGER_LEFT  = 23
+GPIO_ECHO_LEFT     = 24
+GPIO_TRIGGER_RIGHT = 5
+GPIO_ECHO_RIGHT    = 6
 
 # Speed of sound in in/s at temperature
 speedSound = 13500 # in/s
 
 # Set pins as output and input
-GPIO.setup(GPIO_TRIGGER1,GPIO.OUT) # Trigger 1
-GPIO.setup(GPIO_ECHO1,GPIO.IN)     # Echo 1
-GPIO.setup(GPIO_TRIGGER2,GPIO.OUT) # Trigger 2
-GPIO.setup(GPIO_ECHO2,GPIO.IN)     # ECHO 2
+GPIO.setup(GPIO_TRIGGER_LEFT,GPIO.OUT) # Trigger 1
+GPIO.setup(GPIO_ECHO_LEFT,GPIO.IN)     # Echo 1
+GPIO.setup(GPIO_TRIGGER_RIGHT,GPIO.OUT) # Trigger 2
+GPIO.setup(GPIO_ECHO_RIGHT,GPIO.IN)     # ECHO 2
 
 # Set trigger to False (Low)
-GPIO.output(GPIO_TRIGGER1, False)
-GPIO.output(GPIO_TRIGGER2, False)
+GPIO.output(GPIO_TRIGGER_LEFT, False)
+GPIO.output(GPIO_TRIGGER_RIGHT, False)
 
 # Set file names
 picture = "test.jpg"
@@ -55,34 +53,25 @@ VOID_DATA   = "VOID"
 SS_FlagSize = 4
 SN_FlagSize = 4
 DCNT_flag   = 0
-
-# Dictionaries for Flag Values
-dictRec = {'0':'INIT_SYN','1':'INIT_SYNACK','2':'INIT_ACK','3':'FULL_DATA_SYN','4':'FULL_DATA_ACK','5':'SYNC_SYN','6':'SYNC_ACK','7':'DATA_SYN','8':'DATA_ACK','9':'DATA_CAM','A':'DATA_SEN','B':'MODE_SYN','C':'MODE_ACK'}
-
-dictSend = {'INIT_SYN':'0','INIT_SYNACK':'1','INIT_ACK':'2','FULL_DATA_SYN':'3','FULL_DATA_ACK':'4','SYNC_SYN':'5','SYNC_ACK':'6','DATA_SYN':'7','DATA_ACK':'8','DATA_CAM':'9','DATA_SEN':'A','MODE_SYN':'B','MODE_ACK':'C'}
-
-# for the mode of the system, FB or BS
-sys_mode = " "
+takeMeasurement_sleep = 0.00001
+settleModule_sleep = 0.5
+betweenMeasurements_sleep = 0.003
 
 # -------------------
 # Defining Functions
 # -------------------
 
-# --------------------------------------------------
-# MeasureLeft takes a measurement from the left sensor
-# --------------------------------------------------
-def MeasureLeft():
-    # This function measures a distance
-    GPIO.output(GPIO_TRIGGER1,True)
+def TakeMeasurement(Trigger, Echo):
+    GPIO.output(Trigger,True)
     # Wait 10us
-    sleep(0.00001)
-    GPIO.output(GPIO_TRIGGER1,False)
+    sleep(takeMeasurement_sleep)
+    GPIO.output(Trigger,False)
     start = time()
 
-    while GPIO.input(GPIO_ECHO1)==0:
+    while GPIO.input(Echo)==0:
         start = time()
 
-    while GPIO.input(GPIO_ECHO1)==1:
+    while GPIO.input(Echo)==1:
         stop = time()
 
     stop = time()
@@ -92,38 +81,14 @@ def MeasureLeft():
 
     return distance
 
-# ---------------------------------------------------
-# MeasureRight takes a measurement from the right sensor
-# ---------------------------------------------------
-def MeasureRight():
-    # This function measures a distance
-    GPIO.output(GPIO_TRIGGER2,True)
-    # Wait 10us
-    sleep(0.00001)
-    GPIO.output(GPIO_TRIGGER2,False)
-    start = time()
-
-    while GPIO.input(GPIO_ECHO2)==0:
-        start = time()
-
-    while GPIO.input(GPIO_ECHO2)==1:
-        stop = time()
-
-    stop = time()
-
-    elapsed = stop-start
-    distance = (elapsed * speedSound)/2
-
-    return distance
-
 # ------------------------------------------------------------------
 # UpdateSideSensors updates the sensor values and returns the values
 # ------------------------------------------------------------------
 def UpdateSideSensors():
 
     # Set trigger to False (Low)
-    GPIO.output(GPIO_TRIGGER1,False)
-    GPIO.output(GPIO_TRIGGER2,False)
+    GPIO.output(GPIO_TRIGGER_LEFT,False)
+    GPIO.output(GPIO_TRIGGER_RIGHT,False)
 
     n = 3
     numPingRight = 0
@@ -132,11 +97,13 @@ def UpdateSideSensors():
     flagLeft = "N"
 
     for i in range( 0,n ):
-        leftMeasure = MeasureLeft()
+        leftMeasure = TakeMeasurement(GPIO_TRIGGER_LEFT, GPIO_ECHO_LEFT)
+        sleep(betweenMeasurements_sleep)
         if (leftMeasure < 120):
             print(str(i) + "Left Measure" + str(leftMeasure))
             numPingLeft = numPingLeft + 1
-        rightMeasure = MeasureRight()
+        rightMeasure = TakeMeasurement(GPIO_TRIGGER_RIGHT, GPIO_ECHO_RIGHT)
+        sleep(betweenMeasurements_sleep)
         if (rightMeasure < 120):
             print(str(i) + "Right Measure" + str(rightMeasure))
             numPingRight = numPingRight + 1
@@ -162,7 +129,7 @@ def splitData(data):
 # Main Script
 # ---------------
 
-sleep(0.5)
+sleep(settleModule_sleep)
 
 server_port = 12000
 client_socket = socket(AF_INET,SOCK_DGRAM)
