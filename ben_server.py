@@ -104,6 +104,8 @@ print("The server is ready to recieve")
 
 def signal_handler(signal,frame):
     server_socket.close()
+    print("full: " + str(sum(times)/len(times)))
+    print("loop: " + str(sum(loop)/len(loop)))
     sys.exit(0)
 
 signal.signal(signal.SIGINT, signal_handler)
@@ -119,8 +121,18 @@ sys_mode = " "
 
 # begin loop
 lost = 0
+
+start = 0
+stop = 0
+times = []
+flag = False
+lstart = 0
+lstop = 0
+loop = []
 while True:
 
+    print("start process")
+    start = time()
     # for testing dropped packets
     response, clientAddress = serverSocket.recvfrom(2048)
     print("recieved number of messages")
@@ -141,8 +153,17 @@ while True:
         packet_num = packet_num + 1
     decode_string(messages)
     if flag:
+        lstart = time()
         response, clientAddress = serverSocket.recvfrom(2048)
     message = "hi"
-    serverSocket.sendto(message.encode(),clientAddress)    
+    serverSocket.sendto(message.encode(),clientAddress)
+    lstop = time()
+    loop.append(lstop - lstart)
+    
     w.update()
     w.update_idletasks()
+
+    stop = time()
+    print("end process")
+    times.append(stop - start)
+
