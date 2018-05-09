@@ -16,8 +16,6 @@ import RPi.GPIO as GPIO
 # Defining Variables
 # -----------------
 
-packetsRec = [0] * MSS
-
 # Dictionaries for Flag Values
 dictRec = {'0':'INIT_SYN','1':'INIT_SYNACK','2':'INIT_ACK','3':'FULL_DATA_SYN','4':'FULL_DATA_ACK','5':'SYNC_SYN','6':'SYNC_ACK','7':'DATA_SYN','8':'DATA_ACK','9':'DATA_CAM','A':'DATA_SEN','B':'MODE_SYN','C':'MODE_ACK'}
 
@@ -49,7 +47,6 @@ serverSocket.bind(('',serverPort))
 print("The server is ready to recieve")
 
 def signal_handler(signal,frame):
-    GPIO.cleanup()
     serverSocket.close()
     print("full: " + str(sum(times)/len(times)))
     print("loop: " + str(sum(loop)/len(loop)))
@@ -57,14 +54,22 @@ def signal_handler(signal,frame):
 
 signal.signal(signal.SIGINT, signal_handler)
 
+start = 0
+stop = 0
+times = []
+flag = False
+lstart = 0
+lstop = 0
+loop = []
+
 # begin loop
 while True:
 
     print("start process")
     start = time()
 
+    response, clientAddress = serverSocket.recvfrom(2048) 
     print("Receiving Data_Sen")
-    response, clientAddress = serverSocket.recvfrom(2048)
     print(response.decode())
 
     print("Receiving Data_Syn")
@@ -73,11 +78,11 @@ while True:
 
     print("Sending Data_Ack")
     message = "Got Data_Ack"
-    serverSocket.sendto(message.encode(), (args.server_name, server_port))        
+    serverSocket.sendto(message.encode(), clientAddress)        
 
     lstart = time()
     response, clientAddress = serverSocket.recvfrom(2048)
-    print(response.encode())
+    print(response.decode())
     print("Received FULL_DATA_SYN")
     message = "Thanks for the data"
     serverSocket.sendto(message.encode(),clientAddress)

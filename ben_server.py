@@ -103,7 +103,7 @@ serverSocket.bind(('',serverPort))
 print("The server is ready to recieve")
 
 def signal_handler(signal,frame):
-    server_socket.close()
+    serverSocket.close()
     print("full: " + str(sum(times)/len(times)))
     print("loop: " + str(sum(loop)/len(loop)))
     sys.exit(0)
