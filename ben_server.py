@@ -75,7 +75,7 @@ def splitData(data):
 HasLost = False
 VOID_DATA = "VOID"
 
-picture = "test_decode.jpg"
+picture = "/ram/test_decode.jpg"
 
 # array to hold encoded string from client
 encode_string = []
@@ -112,7 +112,7 @@ signal.signal(signal.SIGINT, signal_handler)
 
 # Setting up gui for displaying image
 w = tkinter.Tk()
-im = Image.open(picture)
+im = Image.open('logo.jpg')
 camImg = ImageTk.PhotoImage(im)
 label = tkinter.Label(w,image=camImg)
 label.pack()
@@ -138,6 +138,8 @@ while True:
     print("recieved number of messages")
 
     num_segs = response.decode()
+    print("Num_segs: " + num_segs)
+
     packet_num = 0
     flag = True
     messages = b""
@@ -151,13 +153,13 @@ while True:
         else:
             messages = messages + response
         packet_num = packet_num + 1
+    lstart = time()
     decode_string(messages)
+    lstop = time()
     if flag:
-        lstart = time()
         response, clientAddress = serverSocket.recvfrom(2048)
     message = "hi"
     serverSocket.sendto(message.encode(),clientAddress)
-    lstop = time()
     loop.append(lstop - lstart)
     
     w.update()
@@ -166,4 +168,3 @@ while True:
     stop = time()
     print("end process")
     times.append(stop - start)
-
