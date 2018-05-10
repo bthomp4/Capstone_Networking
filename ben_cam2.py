@@ -89,7 +89,6 @@ def signal_handler(signal,frame):
 
 signal.signal(signal.SIGINT, signal_handler)
 
-
 start = 0
 stop = 0
 times = []
