@@ -29,7 +29,8 @@ def encodeImage():
     cam_pic.save("test2_scaled.jpg",quality=20) 
 
     with open("test2_scaled.jpg",'rb') as image:
-        image_64_encode = base64.encodestring(image.read())
+        readImage = image.read()
+        image_64_encode = base64.encodestring(readImage)
 
     return image_64_encode
 
@@ -49,7 +50,7 @@ def splitData(data):
 # ---------------
 
 # Set file names
-picture = "test.jpg"
+picture = "/ram/test.jpg"
 
 # Set variables
 DATA_SIZE   = 1500
@@ -58,19 +59,11 @@ SS_FlagSize = 4
 SN_FlagSize = 4
 DCNT_flag   = 0
 
-# Dictionaries for Flag Values
-dictRec = {'0':'INIT_SYN','1':'INIT_SYNACK','2':'INIT_ACK','3':'0','4':'FULL_DATA_ACK','5':'SYNC_SYN','6':'SYNC_ACK','7':'DATA_SYN','8':'DATA_ACK','9':'DATA_CAM','A':'DATA_SEN','B':'MODE_SYN','C':'MODE_ACK'}
-
-dictSend = {'INIT_SYN':'0','INIT_SYNACK':'1','INIT_ACK':'2','0':'3','FULL_DATA_ACK':'4','SYNC_SYN':'5','SYNC_ACK':'6','DATA_SYN':'7','DATA_ACK':'8','DATA_CAM':'9','DATA_SEN':'A','MODE_SYN':'B','MODE_ACK':'C'}
-
 # check point divider value
 cp = 1
 
 # initialize encode_msgs list
 encode_msgs = []
-
-# for the mode of the system, FB or BS
-sys_mode = " "
 
 camera = PiCamera()
 
@@ -100,32 +93,35 @@ while True:
 
     print("start process")
     start = time()
-    # capture picture    
+    # capture picture
+    lstart = time()
     camera.capture(picture)
+    lstop = time()
 
     string = encodeImage()
 
+    print("Length of the string: ", len(string))
+
     encode_msgs = []
 
+    count = 0
+
     while string:
+        count = count + 1
         encode_msgs.append(string[:DATA_SIZE])
         string = string[DATA_SIZE:]
+
+    print(str(count))
 
     # segment size
     SS = str(len(encode_msgs))
 
-    # pad segment size to be 4 bytes
-    if (len(SS) != SS_FlagSize):
-        for i in range(0,(SS_FlagSize - len(SS))):
-             SS = '0' + SS
-
     #Sending SYNC_SYN message
+    print("Segment Size: ", SS)
     message = SS 
     client_socket.sendto(message.encode(), (args.server_name,server_port))
     packet_count = 0
     num_packet = 0
-
-
 
     while(num_packet < len(encode_msgs)):
 
@@ -137,12 +133,10 @@ while True:
         num_packet = num_packet + 1
 
     message = "end_data_sync" 
-    lstart = time()
     client_socket.sendto(message.encode(),(args.server_name,server_port))
 
     # recieving message from server
     response,serverAddress = client_socket.recvfrom(2048)
-    lstop = time()
     loop.append(lstop - lstart)
     
     stop = time()
