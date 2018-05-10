@@ -55,7 +55,7 @@ SN_FlagSize = 4
 DCNT_flag   = 0
 takeMeasurement_sleep = 0.00001
 settleModule_sleep = 0.5
-betweenMeasurements_sleep = 0.003
+betweenMeasurements_sleep = 0.05
 
 # -------------------
 # Defining Functions
@@ -141,6 +141,8 @@ args = parser.parse_args()
 def signal_handler(signal,frame):
     GPIO.cleanup()
     client_socket.close()
+    print("full: " + str(sum(times)/len(times)))
+    #print("loop: " + str(sum(loop)/len(loop)))
     sys.exit(0)
 
 signal.signal(signal.SIGINT, signal_handler)
@@ -176,9 +178,11 @@ while True:
     response,serverAddress = client_socket.recvfrom(2048)
 
     # Then send a FULL_DATA_SYN
-    msg_data = sys_mode + '!' + "SEN"
+    msg_data = "ben is mean"
     print("Sending FULL_DATA_SYN")
     message = msg_data
     client_socket.sendto(message.encode(), (args.server_name,server_port))
 
-client_socket.close()
+    stop = time()
+    print("end process")
+    times.append(stop - start)
