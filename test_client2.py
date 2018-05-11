@@ -1,4 +1,4 @@
-# This program is used for testing the client program w/o using the PiCamera & Sensors
+# This program is used for the testing the client side w/o the PiCamera & Sensors
 
 from socket import *
 import argparse
@@ -18,7 +18,6 @@ from time import *
 
 # Set file names
 picture = "tempPic.jpg"
-scaledPic = "pic_scaled.jpg"
 
 # Set variables
 DATA_SIZE   = 500
@@ -27,16 +26,18 @@ SN_1        = "0001"
 VOID_DATA   = "VOID"
 SS_FlagSize = 4
 SN_FlagSize = 4
+DCNT_flag   = 0
+takeMeasurement_sleep = 0.00001
+settleModule_sleep = 0.5
+sideSensorRange    = 120
 
 # Dictionaries for Flag Values
-dictRec = {'0':'INIT_SYN','1':'INIT_SYNACK','2':'INIT_ACK','3':'FULL_DATA_SYN','4':'FULL_DATA_ACK','5':'SYNC_SYN','6':'SYNC_ACK','7':'DATA_SYN','8':'DATA_ACK','9':'DATA_CAM','A':'DATA_SEN','B':'MODE_SYN','C':'MODE_ACK'}
+dictRec = {'0':'INIT_SYN','1':'INIT_SYNACK','2':'INIT_ACK','3':'FULL_DATA_SYN','4':'FULL_DATA_ACK','5':'SYNC_SYN','6':'SYNC_ACK','7':'DATA_SYN','8':'DATA_ACK','9':'DATA_CAM','A':'DATA_SEN','B':'MODE_SYN','C':'MODE_ACK','D':'DCNT'}
 
-dictSend = {'INIT_SYN':'0','INIT_SYNACK':'1','INIT_ACK':'2','FULL_DATA_SYN':'3','FULL_DATA_ACK':'4','SYNC_SYN':'5','SYNC_ACK':'6','DATA_SYN':'7','DATA_ACK':'8','DATA_CAM':'9','DATA_SEN':'A','MODE_SYN':'B','MODE_ACK':'C'}
+dictSend = {'INIT_SYN':'0','INIT_SYNACK':'1','INIT_ACK':'2','FULL_DATA_SYN':'3','FULL_DATA_ACK':'4','SYNC_SYN':'5','SYNC_ACK':'6','DATA_SYN':'7','DATA_ACK':'8','DATA_CAM':'9','DATA_SEN':'A','MODE_SYN':'B','MODE_ACK':'C', 'DCNT':'D'}
 
 # check point divider value
-cp = 8
-
-drop_packets = []
+cp = 1
 
 # initialize encode_msgs list
 encode_msgs = []
@@ -48,20 +49,26 @@ sys_mode = " "
 # Defining Functions
 # -------------------
 
+# -----------------------------------
+# Takes a measurement from the sensor
+# -----------------------------------
+def TakeMeasurement():
+    distance = 100
+
+    return distance 
+
 # -----------
 # encodeImage
 # -----------
 def encodeImage():
-    # Compress the image
+    #Compress the image
     cam_pic = Image.open(picture)
-
+    
     cam_pic = cam_pic.resize((800,480),Image.ANTIALIAS)
-    cam_pic.save(scaledPic,quality=20) 
+    cam_pic.save("test2_scaled.jpg",quality=20) 
 
-    with open(scaledPic,'rb') as image:
+    with open("test2_scaled.jpg",'rb') as image:
         image_64_encode = base64.encodestring(image.read())
-
-    print(image_64_encode)
 
     return image_64_encode
 
@@ -70,10 +77,29 @@ def encodeImage():
 # ------------------------------------------------------------------
 def UpdateSideSensors():
 
-    distance1 = "Y"
-    distance2 = "N"
+    n = 3
+    numPingRight = 0
+    numPingLeft = 0
+    flagRight = "N"
+    flagLeft = "N"
 
-    return distance1, distance2
+    for i in range( 0,n ):
+        leftMeasure = TakeMeasurement()
+        sleep(takeMeasurement_sleep)
+        if (leftMeasure < sideSensorRange):
+            print(str(i) + "Left Measure" + str(leftMeasure))
+            numPingLeft = numPingLeft + 1
+        rightMeasure = TakeMeasurement()
+        sleep(takeMeasurement_sleep)
+        if (rightMeasure < sideSensorRange):
+            print(str(i) + "Right Measure" + str(rightMeasure))
+            numPingRight = numPingRight + 1
+    if ( numPingLeft > (n/2) ):
+        flagLeft = "Y"
+    if ( numPingRight > (n/2) ):
+        flagRight = "Y"
+
+    return flagLeft, flagRight
 
 # --------------------------------------------
 # splitData is used to split data based on '!'
@@ -90,6 +116,8 @@ def splitData(data):
 # Main Script
 # ---------------
 
+sleep(settleModule_sleep)
+
 server_port = 12000
 client_socket = socket(AF_INET,SOCK_DGRAM)
 
@@ -104,7 +132,8 @@ def signal_handler(signal,frame):
 signal.signal(signal.SIGINT, signal_handler)
 
 # sending a message to initialize connection
-message = dictSend['INIT_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + VOID_DATA 
+print("Sending INIT_SYN")
+message = dictSend['INIT_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + VOID_DATA
 
 client_socket.sendto(message.encode(),(args.server_name,server_port))
 
@@ -116,55 +145,58 @@ while True:
 
     if dictRec[splitPacket[0].decode()] == 'INIT_SYNACK':
         # send back an INIT_ACK
+        print("Received INIT_SYNACK, sending INIT_ACK")
         message = dictSend['INIT_ACK'] + ',' + MSS_1 + ',' + SN_1 + ',' + VOID_DATA
         client_socket.sendto(message.encode(),(args.server_name,server_port))
     elif dictRec[splitPacket[0].decode()] == 'MODE_SYN':
         # Send back MODE_ACK
+        print("Received MODE_SYN")
         sys_mode = splitPacket[3].decode()
 
         # When in Full Battery Mode, turn on Camera
         if (sys_mode == "FB"):
-            print("Camera turned on")
+            print("Turn on Camera")
 
-        message = dictSend['MODE_ACK'] + ',' + MSS_1 + ',' + SN_1 + ',' + sys_mode 
+        print("Sending MODE_ACK")
+        message = dictSend['MODE_ACK'] + ',' + MSS_1 + ',' + SN_1 + ',' + sys_mode
         client_socket.sendto(message.encode(),(args.server_name,server_port))
     elif dictRec[splitPacket[0].decode()] == 'SYNC_ACK':
 
-        data_type,SS = splitData(splitPacket[3])  
+        print("Received SYNC_ACK")
+
+        data_type,SS = splitData(splitPacket[3])
 
         if data_type == "CAM":
+            print("Handling Camera Data")
             packet_count = 0
             num_packet = 0
 
             check_point = (int(SS)//cp)
 
-            while(num_packet < len(encode_msgs)):		
-        
+            while(num_packet < len(encode_msgs)):
+
                 packet_count = packet_count + 1
-                # remove later --------
-                if num_packet not in drop_packets:
-                # remove later --------
-                    data = encode_msgs[num_packet]
+                data = encode_msgs[num_packet]
 
-                    # Segment Number
-                    SN = str(num_packet)
+                # Segment Number
+                SN = str(num_packet)
 
-                    # pad segment number to be 4 bytes
-                    if (len(SN) != SN_FlagSize):
-                        for l in range(0,(SN_FlagSize - len(SN))):
-                            SN = '0' + SN
+                # pad segment number to be 4 bytes
+                if (len(SN) != SN_FlagSize):
+                    for l in range(0,(SN_FlagSize - len(SN))):
+                        SN = '0' + SN
 
-                    # Sending Camera Data
-                    packetInfo = dictSend['DATA_CAM'] + ',' + SS + ',' + SN + ',' 
+                # Sending Camera Data
+                packetInfo = dictSend['DATA_CAM'] + ',' + SS + ',' + SN + ','
 
-                    client_socket.sendto(packetInfo.encode() + data, (args.server_name,server_port))
-            
+                client_socket.sendto(packetInfo.encode() + data, (args.server_name,server_port))
+
                 # if sent 1/8 of SS
-                if (packet_count == check_point):		
-            
+                if (packet_count == check_point):
+
                     # reset the packet count
-                    packet_count = 0 
-                
+                    packet_count = 0
+
                     # sending Data_Syn to server
                     msg_data = "CAM!" + SS
                     message = dictSend['DATA_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + msg_data
@@ -186,17 +218,16 @@ while True:
                                     SN = '0' + SN
                             message = dictSend['DATA_CAM'] + ',' + SS + ',' + SN + ','
                             client_socket.sendto(message.encode() + data, (args.server_name, server_port))
-                     
+
                         # sending data syn to server
                         msg_data = "CAM!" + SS
                         message = dictSend['DATA_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + msg_data
                         client_socket.sendto(message.encode(), (args.server_name,server_port))
-
                         response,serverAddress = client_socket.recvfrom(2048)
                         splitResponse = response.split(b',')
 
                         data_type,other = splitData(splitResponse[3])
-                        
+
                         packet_lost = int(other)
                 num_packet = num_packet + 1
 
@@ -204,49 +235,41 @@ while True:
             message = dictSend['FULL_DATA_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + msg_data
             client_socket.sendto(message.encode(),(args.server_name,server_port))
         elif data_type == "SEN":
+            print("Handling Sensor Data")
             # Send DATA_SEN message
             LS, RS = UpdateSideSensors()
-
-            # Here Temporarily, will only exist in front unit in future
-            # -----------------------------------------------
-            print("LS: " + str(LS) + "\t\tRS: " + str(RS))
-
-            if RS == "Y": #if w/i 120in or 10ft
-                print("Turn Right LEDS ON")
-            else:
-                print("Turn Right LEDS OFF")
-            if LS == "Y":
-                print("Turn LEFT LEDS ON")
-            else:
-                print("Turn LEFT LEDS OFF")
-            # ---------------------------------------------
-
 
             msg_data = LS + '!' + RS
 
             message = dictSend['DATA_SEN'] + ',' + MSS_1 + ',' + SN_1 + ',' + msg_data
-            client_socket.sendto(message.encode(), (args.server_name,server_port))     
-            
+            client_socket.sendto(message.encode(), (args.server_name,server_port))
+
             # Send DATA_SYN
+            print("Sending Data_SYN")
             message = dictSend['DATA_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + "SEN!VOID"
             client_socket.sendto(message.encode(), (args.server_name,server_port))
 
             # Wait for DATA_ACK from Server
+            print("Receiving DATA_ACK")
             response,serverAddress = client_socket.recvfrom(2048)
 
             # Then send a FULL_DATA_SYN
             msg_data = sys_mode + '!' + "SEN"
+            print("Sending FULL_DATA_SYN")
             message = dictSend['FULL_DATA_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + msg_data
-            client_socket.sendto(message.encode(), (args.server_name,server_port)) 
- 
+            client_socket.sendto(message.encode(), (args.server_name,server_port))
+
     elif dictRec[splitPacket[0].decode()] == 'FULL_DATA_ACK':
-   
+
+        print("Receiving FULL_DATA_ACK")
+
         sys_mode,data_type = splitData(splitPacket[3])
 
         if sys_mode == "FB":
             # Sending both camera and sensor data
 
             if data_type == "VOID" or data_type == "SEN":
+
                 string = encodeImage()
 
                 encode_msgs = []
@@ -257,25 +280,25 @@ while True:
 
                 # segment size
                 SS = str(len(encode_msgs))
-    
+
                 # pad segment size to be 4 bytes
                 if (len(SS) != SS_FlagSize):
                     for i in range(0,(SS_FlagSize - len(SS))):
                         SS = '0' + SS
-     
+
                 #Sending SYNC_SYN message
                 msg_data = "CAM" + '!' + SS
                 message = dictSend['SYNC_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + msg_data
 
                 client_socket.sendto(message.encode(), (args.server_name,server_port))
-
             elif data_type == "CAM":
-                # send SYNC_SYN for SENSOR   
+                # send SYNC_SYN for SENSOR
+                print("Sending SYNC_SYN for Sensor DATA")
 
-                message = dictSend['SYNC_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + "SEN!1" 
+                message = dictSend['SYNC_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + "SEN!1"
                 client_socket.sendto(message.encode(), (args.server_name,server_port))
         elif sys_mode == "BS":
-            print("SENDING SYNC_SYN for SEN")
+            print("in BS mode, Sending SYNC_SYN for Sensor Data")
             # Only sending sensor data since display is turned off
             message = dictSend['SYNC_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + "SEN!1"
             client_socket.sendto(message.encode(), (args.server_name,server_port))
