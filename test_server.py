@@ -11,7 +11,8 @@ from time import *
 import signal
 import sys
 
-#import RPi.GPIO as GPIO
+import RPi.GPIO as GPIO
+
 
 # ------------------
 # Defining Variables
@@ -36,7 +37,7 @@ dictRec = {'0':'INIT_SYN','1':'INIT_SYNACK','2':'INIT_ACK','3':'FULL_DATA_SYN','
 dictSend = {'INIT_SYN':'0','INIT_SYNACK':'1','INIT_ACK':'2','FULL_DATA_SYN':'3','FULL_DATA_ACK':'4','SYNC_SYN':'5','SYNC_ACK':'6','DATA_SYN':'7','DATA_ACK':'8','DATA_CAM':'9','DATA_SEN':'A','MODE_SYN':'B','MODE_ACK':'C','DCNT':'D'}
 
 # GPIO pins (BCM) and their purpose
-#GPIO.setmode(GPIO.BCM)
+GPIO.setmode(GPIO.BCM)
 GPIO_ModeSel       = 16
 GPIO_lidarTrig     = 23
 GPIO_lidarEcho     = 20
@@ -51,26 +52,26 @@ GPIO_LEDEn         = 17
 ##GPIO_LBO          = 26
 
 # Set pins as output and input
-#GPIO.setup(GPIO_ModeSel,GPIO.IN)
-#GPIO.setup(GPIO_lidarTrig,GPIO.OUT)
-#GPIO.setup(GPIO_lidarEcho,GPIO.IN)
-#GPIO.setup(GPIO_LEDSRIGHT,GPIO.OUT)
-#GPIO.setup(GPIO_LEDSLEFT,GPIO.OUT)
-#GPIO.setup(GPIO_LEDSel0,GPIO.OUT)
-#GPIO.setup(GPIO_LEDSel1,GPIO.OUT)
-#GPIO.setup(GPIO_LEDSel2,GPIO.OUT)
-#GPIO.setup(GPIO_LEDEn,GPIO.OUT)
+GPIO.setup(GPIO_ModeSel,GPIO.IN)
+GPIO.setup(GPIO_lidarTrig,GPIO.OUT)
+GPIO.setup(GPIO_lidarEcho,GPIO.IN)
+GPIO.setup(GPIO_LEDSRIGHT,GPIO.OUT)
+GPIO.setup(GPIO_LEDSLEFT,GPIO.OUT)
+GPIO.setup(GPIO_LEDSel0,GPIO.OUT)
+GPIO.setup(GPIO_LEDSel1,GPIO.OUT)
+GPIO.setup(GPIO_LEDSel2,GPIO.OUT)
+GPIO.setup(GPIO_LEDEn,GPIO.OUT)
 ##GPIO.setup(GPIO_LEDStatus, GPIO.OUT)
 ##GPIO.setup(GPIO_SafeSD, GPIO.IN)
 ##GPIO.setup(GPIO_LBO, GPIO.IN)
 
-#GPIO.output(GPIO_lidarTrig,False)
-#GPIO.output(GPIO_LEDSRIGHT, False)
-#GPIO.output(GPIO_LEDSLEFT, False)
-#GPIO.output(GPIO_LEDSel0, False)
-#GPIO.output(GPIO_LEDSel1, False)
-#GPIO.output(GPIO_LEDSel2, False)
-#GPIO.output(GPIO_LEDEn, False)
+GPIO.output(GPIO_lidarTrig,False)
+GPIO.output(GPIO_LEDSRIGHT, False)
+GPIO.output(GPIO_LEDSLEFT, False)
+GPIO.output(GPIO_LEDSel0, False)
+GPIO.output(GPIO_LEDSel1, False)
+GPIO.output(GPIO_LEDSel2, False)
+GPIO.output(GPIO_LEDEn, False)
 ##GPIO.output(GPIO_LEDStatus, False)
 
 # ------------------
@@ -227,12 +228,12 @@ label.pack()
 w.update()
 
 # Setting the mode of the system
-sys_mode = "FB"
+#sys_mode = "FB"
 
-#if GPIO.input(GPIO_ModeSel):
-#    sys_mode = "FB"
-#else:
-#    sys_mode = "BS"
+if GPIO.input(GPIO_ModeSel):
+    sys_mode = "FB"
+else:
+    sys_mode = "BS"
 
 
 serverSocket.setblocking(False) # to allow for the loop to process
@@ -357,66 +358,66 @@ while True:
     
         LS,RS = splitData(splitPacket[3])
 
-        #UpdateLidar()
+        UpdateLidar()
         
-        #if FrontLEDs == 0:
-        #    GPIO.output(GPIO_LEDSel0, False)
-        #    GPIO.output(GPIO_LEDSel1, False)
-        #    GPIO.output(GPIO_LEDSel2, False)
-        #    GPIO.output(GPIO_LEDEn, False)
-        #elif FrontLEDs == 1:
-        #    GPIO.output(GPIO_LEDSel0, False)
-        #    GPIO.output(GPIO_LEDSel1, False)
-        #    GPIO.output(GPIO_LEDSel2, False)
-        #    GPIO.output(GPIO_LEDEn, True)
-        #elif FrontLEDs == 2:
-        #    GPIO.output(GPIO_LEDSel0, True)
-        #    GPIO.output(GPIO_LEDSel1, False)
-        #    GPIO.output(GPIO_LEDSel2, False)
-        #    GPIO.output(GPIO_LEDEn, True)
-        #elif FrontLEDs == 3:
-        #    GPIO.output(GPIO_LEDSel0, False)
-        #    GPIO.output(GPIO_LEDSel1, True)
-        #    GPIO.output(GPIO_LEDSel2, False)
-        #    GPIO.output(GPIO_LEDEn, True)
-        #elif FrontLEDs == 4:
-        #    GPIO.output(GPIO_LEDSel0, True)
-        #    GPIO.output(GPIO_LEDSel1, True)
-        #    GPIO.output(GPIO_LEDSel2, False)
-        #    GPIO.output(GPIO_LEDEn, True)
-        #elif FrontLEDs == 5:
-        #    GPIO.output(GPIO_LEDSel0, False)
-        #    GPIO.output(GPIO_LEDSel1, False)
-        #    GPIO.output(GPIO_LEDSel2, True)
-        #    GPIO.output(GPIO_LEDEn, True)
-        #elif FrontLEDs == 6:
-        #    GPIO.output(GPIO_LEDSel0, True)
-        #    GPIO.output(GPIO_LEDSel1, False)
-        #    GPIO.output(GPIO_LEDSel2, True)
-        #    GPIO.output(GPIO_LEDEn, True)
-        #elif FrontLEDs == 7:
-        #    GPIO.output(GPIO_LEDSel0, False)
-        #    GPIO.output(GPIO_LEDSel1, True)
-        #    GPIO.output(GPIO_LEDSel2, True)
-        #    GPIO.output(GPIO_LEDEn, True)
-        #elif FrontLEDs == 8:
-        #    GPIO.output(GPIO_LEDSel0, True)
-        #    GPIO.output(GPIO_LEDSel1, True)
-        #    GPIO.output(GPIO_LEDSel2, True)
-        #    GPIO.output(GPIO_LEDEn, True)
+        if FrontLEDs == 0:
+            GPIO.output(GPIO_LEDSel0, False)
+            GPIO.output(GPIO_LEDSel1, False)
+            GPIO.output(GPIO_LEDSel2, False)
+            GPIO.output(GPIO_LEDEn, False)
+        elif FrontLEDs == 1:
+            GPIO.output(GPIO_LEDSel0, False)
+            GPIO.output(GPIO_LEDSel1, False)
+            GPIO.output(GPIO_LEDSel2, False)
+            GPIO.output(GPIO_LEDEn, True)
+        elif FrontLEDs == 2:
+            GPIO.output(GPIO_LEDSel0, True)
+            GPIO.output(GPIO_LEDSel1, False)
+            GPIO.output(GPIO_LEDSel2, False)
+            GPIO.output(GPIO_LEDEn, True)
+        elif FrontLEDs == 3:
+            GPIO.output(GPIO_LEDSel0, False)
+            GPIO.output(GPIO_LEDSel1, True)
+            GPIO.output(GPIO_LEDSel2, False)
+            GPIO.output(GPIO_LEDEn, True)
+        elif FrontLEDs == 4:
+            GPIO.output(GPIO_LEDSel0, True)
+            GPIO.output(GPIO_LEDSel1, True)
+            GPIO.output(GPIO_LEDSel2, False)
+            GPIO.output(GPIO_LEDEn, True)
+        elif FrontLEDs == 5:
+            GPIO.output(GPIO_LEDSel0, False)
+            GPIO.output(GPIO_LEDSel1, False)
+            GPIO.output(GPIO_LEDSel2, True)
+            GPIO.output(GPIO_LEDEn, True)
+        elif FrontLEDs == 6:
+            GPIO.output(GPIO_LEDSel0, True)
+            GPIO.output(GPIO_LEDSel1, False)
+            GPIO.output(GPIO_LEDSel2, True)
+            GPIO.output(GPIO_LEDEn, True)
+        elif FrontLEDs == 7:
+            GPIO.output(GPIO_LEDSel0, False)
+            GPIO.output(GPIO_LEDSel1, True)
+            GPIO.output(GPIO_LEDSel2, True)
+            GPIO.output(GPIO_LEDEn, True)
+        elif FrontLEDs == 8:
+            GPIO.output(GPIO_LEDSel0, True)
+            GPIO.output(GPIO_LEDSel1, True)
+            GPIO.output(GPIO_LEDSel2, True)
+            GPIO.output(GPIO_LEDEn, True)
 
         # Lighting up LEDs for Side Sensors
         if RS == "Y": 
-            #GPIO.output(GPIO_LEDSRIGHT,True)
+            GPIO.output(GPIO_LEDSRIGHT,True)
             print("Turn Right LEDS ON")
         else:
-            #GPIO.output(GPIO_LEDSRIGHT,False)
+            GPIO.output(GPIO_LEDSRIGHT,False)
             print("Turn Right LEDS OFF")
         if LS == "Y":
-            #GPIO.output(GPIO_LEDSLEFT,True)
+            GPIO.output(GPIO_LEDSLEFT,True)
             print("Turn LEFT LEDS ON")
         else:
-            #GPIO.output(GPIO_LEDSLEFT,False)
+            GPIO.output(GPIO_LEDSLEFT,False)
             print("Turn LEFT LEDS OFF")
     
     elif dictRec[splitPacket[0].decode()] == 'DCNT':
