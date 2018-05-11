@@ -131,12 +131,12 @@ def UpdateSideSensors():
 
     for i in range( 0,n ):
         leftMeasure = TakeMeasurement(GPIO_TRIGGER_LEFT, GPIO_ECHO_LEFT)
-        sleep(betweenMeasurements_sleep)
+        sleep(takeMeasurement_sleep)
         if (leftMeasure < sideSensorRange):
             print(str(i) + "Left Measure" + str(leftMeasure))
             numPingLeft = numPingLeft + 1
         rightMeasure = TakeMeasurement(GPIO_TRIGGER_RIGHT, GPIO_ECHO_RIGHT)
-        sleep(betweenMeasurements_sleep)
+        sleep(takeMeasurement_sleep)
         if (rightMeasure < sideSensorRange):
             print(str(i) + "Right Measure" + str(rightMeasure))
             numPingRight = numPingRight + 1
