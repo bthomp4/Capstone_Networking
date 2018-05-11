@@ -26,10 +26,12 @@ from picamera import PiCamera
 GPIO.setmode(GPIO.BCM)
 
 # Define GPIO to use on Pi
-GPIO_TRIGGER_LEFT = 23
-GPIO_ECHO_LEFT    = 24
+GPIO_TRIGGER_LEFT  = 23
+GPIO_ECHO_LEFT     = 24
 GPIO_TRIGGER_RIGHT = 5
 GPIO_ECHO_RIGHT    = 6
+#GPIO_SafeShutdown = 3
+#GPIO_LBO          = 26 
 
 # Speed of sound in in/s at temperature
 speedSound = 13500 # in/s
@@ -45,7 +47,7 @@ GPIO.output(GPIO_TRIGGER_LEFT, False)
 GPIO.output(GPIO_TRIGGER_RIGHT, False)
 
 # Set file names
-picture = "test.jpg"
+picture = "/ram/test.jpg"
 
 # Set variables
 DATA_SIZE   = 500
@@ -57,11 +59,12 @@ SN_FlagSize = 4
 DCNT_flag   = 0
 takeMeasurement_sleep = 0.00001
 settleModule_sleep = 0.5
+sideSensorRange    = 120
 
 # Dictionaries for Flag Values
-dictRec = {'0':'INIT_SYN','1':'INIT_SYNACK','2':'INIT_ACK','3':'FULL_DATA_SYN','4':'FULL_DATA_ACK','5':'SYNC_SYN','6':'SYNC_ACK','7':'DATA_SYN','8':'DATA_ACK','9':'DATA_CAM','A':'DATA_SEN','B':'MODE_SYN','C':'MODE_ACK'}
+dictRec = {'0':'INIT_SYN','1':'INIT_SYNACK','2':'INIT_ACK','3':'FULL_DATA_SYN','4':'FULL_DATA_ACK','5':'SYNC_SYN','6':'SYNC_ACK','7':'DATA_SYN','8':'DATA_ACK','9':'DATA_CAM','A':'DATA_SEN','B':'MODE_SYN','C':'MODE_ACK','D':'DCNT'}
 
-dictSend = {'INIT_SYN':'0','INIT_SYNACK':'1','INIT_ACK':'2','FULL_DATA_SYN':'3','FULL_DATA_ACK':'4','SYNC_SYN':'5','SYNC_ACK':'6','DATA_SYN':'7','DATA_ACK':'8','DATA_CAM':'9','DATA_SEN':'A','MODE_SYN':'B','MODE_ACK':'C'}
+dictSend = {'INIT_SYN':'0','INIT_SYNACK':'1','INIT_ACK':'2','FULL_DATA_SYN':'3','FULL_DATA_ACK':'4','SYNC_SYN':'5','SYNC_ACK':'6','DATA_SYN':'7','DATA_ACK':'8','DATA_CAM':'9','DATA_SEN':'A','MODE_SYN':'B','MODE_ACK':'C', 'DCNT':'D'}
 
 # check point divider value
 cp = 1
@@ -128,11 +131,13 @@ def UpdateSideSensors():
 
     for i in range( 0,n ):
         leftMeasure = TakeMeasurement(GPIO_TRIGGER_LEFT, GPIO_ECHO_LEFT)
-        if (leftMeasure < 120):
+        sleep(betweenMeasurements_sleep)
+        if (leftMeasure < sideSensorRange):
             print(str(i) + "Left Measure" + str(leftMeasure))
             numPingLeft = numPingLeft + 1
         rightMeasure = TakeMeasurement(GPIO_TRIGGER_RIGHT, GPIO_ECHO_RIGHT)
-        if (rightMeasure < 120):
+        sleep(betweenMeasurements_sleep)
+        if (rightMeasure < sideSensorRange):
             print(str(i) + "Right Measure" + str(rightMeasure))
             numPingRight = numPingRight + 1
     if ( numPingLeft > (n/2) ):

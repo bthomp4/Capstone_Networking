@@ -1,4 +1,5 @@
 from socket import *
+from errno import *
 
 # for decoding and displaying the image
 import base64
@@ -16,73 +17,61 @@ import RPi.GPIO as GPIO
 # Defining Variables
 # ------------------
 
-# Set variables
-HasLost = False
-VOID_DATA = "VOID"
-
+noConnect = True   # Boolean for stating connection of a client
+HasLost = False    # Boolean for packet loss
+FrontLEDs = 0
+settleModule_sleep = 0.5
+takeMeasurement_sleep = 0.00001
+MSS = 9999    # Max Segment Size
+encode_string = []    # holds encoded string from client
 picture = "test_decode.jpg"
 logo = "logo.jpg"
-
-# array to hold encoded string from client
-encode_string = []
-
-# Max Segment Size
-MSS   = 9999
-MSS_1 = "0001"
-SN_1  = "0001"
-
-# where packets need to be checked for loss
-check_pt = 0
-
-# value of where packets will be checked
-cp_value = 1
-
-# List for storing which packets have been received
-packetsRec = [0] * MSS
+check_pt = 0    # where packets need to be checked for loss 
+cp_value = 1    # SS/cp_value = num of packets sent per check
+packetsRec = [0] * MSS    # stores packets that have been received
 
 # Dictionaries for Flag Values
-dictRec = {'0':'INIT_SYN','1':'INIT_SYNACK','2':'INIT_ACK','3':'FULL_DATA_SYN','4':'FULL_DATA_ACK','5':'SYNC_SYN','6':'SYNC_ACK','7':'DATA_SYN','8':'DATA_ACK','9':'DATA_CAM','A':'DATA_SEN','B':'MODE_SYN','C':'MODE_ACK'}
+dictRec = {'0':'INIT_SYN','1':'INIT_SYNACK','2':'INIT_ACK','3':'FULL_DATA_SYN','4':'FULL_DATA_ACK','5':'SYNC_SYN','6':'SYNC_ACK','7':'DATA_SYN','8':'DATA_ACK','9':'DATA_CAM','A':'DATA_SEN','B':'MODE_SYN','C':'MODE_ACK', 'D':'DCNT'}
 
-dictSend = {'INIT_SYN':'0','INIT_SYNACK':'1','INIT_ACK':'2','FULL_DATA_SYN':'3','FULL_DATA_ACK':'4','SYNC_SYN':'5','SYNC_ACK':'6','DATA_SYN':'7','DATA_ACK':'8','DATA_CAM':'9','DATA_SEN':'A','MODE_SYN':'B','MODE_ACK':'C'}
+dictSend = {'INIT_SYN':'0','INIT_SYNACK':'1','INIT_ACK':'2','FULL_DATA_SYN':'3','FULL_DATA_ACK':'4','SYNC_SYN':'5','SYNC_ACK':'6','DATA_SYN':'7','DATA_ACK':'8','DATA_CAM':'9','DATA_SEN':'A','MODE_SYN':'B','MODE_ACK':'C','DCNT':'D'}
 
 # GPIO pins (BCM) and their purpose
 GPIO.setmode(GPIO.BCM)
-
-#GPIO_ModeSel    = 16
-
-GPIO_lidarTrigger = 23
-GPIO_lidarEcho    = 20
-GPIO_LEDSRIGHT    = 21
-GPIO_LEDSLEFT     = 27
-
-GPIO_FRONTLEDSel0  = 2
-GPIO_FRONTLEDSel1  = 14
-GPIO_FRONTLEDSel2  = 4    #MSB
-GPIO_FRONTLEDEn    = 17
-#GPIO_FRONTStatus  = 11
+GPIO_ModeSel       = 16
+GPIO_lidarTrig     = 23
+GPIO_lidarEcho     = 20
+GPIO_LEDSRIGHT     = 21
+GPIO_LEDSLEFT      = 27
+GPIO_LEDSel0       = 2
+GPIO_LEDSel1       = 14
+GPIO_LEDSel2       = 4    #MSB
+GPIO_LEDEn         = 17
+#GPIO_LEDStatus    = 11
+#GPIO_SafeSD       = 3
+#GPIO_LBO          = 26
 
 # Set pins as output and input
-#GPIO.setup(GPIO_ModeSel,GPIO.IN)
-
-GPIO.setup(GPIO_lidarTrigger,GPIO.OUT) # Trigger 1
-GPIO.setup(GPIO_lidarEcho,GPIO.IN)     # Echo 1
+GPIO.setup(GPIO_ModeSel,GPIO.IN)
+GPIO.setup(GPIO_lidarTrig,GPIO.OUT)
+GPIO.setup(GPIO_lidarEcho,GPIO.IN)
 GPIO.setup(GPIO_LEDSRIGHT,GPIO.OUT)
 GPIO.setup(GPIO_LEDSLEFT,GPIO.OUT)
-GPIO.setup(GPIO_FRONTLEDSel0,GPIO.OUT)
-GPIO.setup(GPIO_FRONTLEDSel1,GPIO.OUT)
-GPIO.setup(GPIO_FRONTLEDSel2,GPIO.OUT)
-GPIO.setup(GPIO_FRONTLEDEn,GPIO.OUT)
+GPIO.setup(GPIO_LEDSel0,GPIO.OUT)
+GPIO.setup(GPIO_LEDSel1,GPIO.OUT)
+GPIO.setup(GPIO_LEDSel2,GPIO.OUT)
+GPIO.setup(GPIO_LEDEn,GPIO.OUT)
+#GPIO.setup(GPIO_LEDStatus, GPIO.OUT)
+#GPIO.setup(GPIO_SafeSD, GPIO.IN)
+#GPIO.setup(GPIO_LBO, GPIO.IN)
 
-# Set default values to False (low)
-GPIO.output(GPIO_lidarTrigger,False)
+GPIO.output(GPIO_lidarTrig,False)
 GPIO.output(GPIO_LEDSRIGHT, False)
 GPIO.output(GPIO_LEDSLEFT, False)
-GPIO.output(GPIO_FRONTLEDSel0, False)
-GPIO.output(GPIO_FRONTLEDSel1, False)
-GPIO.output(GPIO_FRONTLEDSel2, False)
-GPIO.output(GPIO_FRONTLEDEn, False)
-
-FrontLEDs = 0
+GPIO.output(GPIO_LEDSel0, False)
+GPIO.output(GPIO_LEDSel1, False)
+GPIO.output(GPIO_LEDSel2, False)
+GPIO.output(GPIO_LEDEn, False)
+#GPIO.output(GPIO_LEDStatus, False)
 
 # ------------------
 # Defining Functions
@@ -124,7 +113,7 @@ def check_point(SegmentSize):
     data = "CAM" + '!' + str(packet_dropped)
 
     # Sending DATA_ACK
-    message = dictSend['DATA_ACK'] + ',' + str(MSS_1) + ',' + str(SN_1) + ',' + data
+    message = dictSend['DATA_ACK'] + ',0001,0001,' + data
 
     serverSocket.sendto(message.encode(),clientAddress)
     
@@ -148,10 +137,10 @@ def splitData(data):
 # ------------------------------------------------
 def MeasureLidar():
     # This function measures a distance
-    GPIO.output(GPIO_lidarTrigger, True)
+    GPIO.output(GPIO_lidarTrig, True)
     # Wait 10us
-    sleep(0.00001) # this is needed
-    GPIO.output(GPIO_lidarTrigger, False)
+    sleep(takeMeasurement_sleep)
+    GPIO.output(GPIO_lidarTrig, False)
     start = time()
 
     while GPIO.input(GPIO_lidarEcho) == 0:
@@ -168,22 +157,19 @@ def MeasureLidar():
 
     return distance
 
-# This function takes 'n' measurements and
-# returns how many LEDs should be on
+# -----------------------------------------
+# UpdateLidar takes 'n' measurements and
+# sets the value for the number of LEDs to
+# be turned on.
+# -----------------------------------------
 def UpdateLidar():
     global FrontLEDs
 
-    # Number of Measurements being taken
-    n = 3
+    n = 3 # num of measurements taken
 
-    # Initialized to zero
-
-    lightLeds = []
     listDist = []
     for i in range(0,n):
         listDist.append(MeasureLidar())
-
-    print(listDist)
 
     last = listDist.pop()
     for d in listDist:
@@ -212,13 +198,12 @@ def UpdateLidar():
         elif d >= 80 and d < 100 and last >= 80 and last < 100:
             FrontLEDs = 1
             break
-    return FrontLEDs
 
 # ---------------
 # Main Script
 # ---------------
 
-sleep(0.5)
+sleep(settleModule_sleep)
 
 # Setting up socket
 serverPort = 12000
@@ -249,41 +234,57 @@ sys_mode = "FB"
 #else:
 #    sys_mode = "BS"
 
+
+serverSocket.setblocking(False) # to allow for the loop to process
+# Initial Handshaking loop
+while noConnect:
+    print("Waiting for connection")
+    print("Flash LED")
+    try:
+        message_rec = True
+        response, clientAddress = serverSocket.recvfrom(2048)
+    except error as e:
+        if e.errno is 107 or e.errno is 11:
+            print("Nothing in socket")
+            message_rec = False
+    if message_rec:
+        noConnect = False
+        message = "Connected"
+
+        splitPacket = response.split(b',')
+        print(dictRec[splitPacket[0].decode())
+
+        if dictRec[splitPacket[0].decode()] == 'INIT_SYN':
+            # send back INIT_SYNACK
+            message = dictSend['INIT_SYNACK'] + ',0001,0001,VOID'
+        
+            serverSocket.sendto(message.encode(),clientAddress) 
+        elif dictRec[splitPacket[0].decode()] == 'INIT_ACK':
+            # Send back MODE_SYN
+            message = dictSend['MODE_SYN'] + ',0001,0001,' + sys_mode
+            serverSocket.sendto(message.encode(),clientAddress)        
+
+            # Wait for MODE_ACK, DATA = "MODE"
+            response, clientAddress = serverSocket.recvfrom(2048)
+
+            # send back FULL_DATA_ACK, DATA = "MODE!VOID"
+            msg_data = sys_mode + '!VOID'
+            message = dictSend['FULL_DATA_ACK'] + ',0001,0001,' + msg_data 
+
+            serverSocket.sendto(message.encode(),clientAddress) 
+
 # begin loop
 while True:
 
-    # for testing dropped packets
     response, clientAddress = serverSocket.recvfrom(2048)
     splitPacket = response.split(b',')
+    print(dictRec[splitPacket[0].decode())
 
-    if dictRec[splitPacket[0].decode()] == 'INIT_SYN':
-        # send back INIT_SYNACK
-        print("Received INIT_SYN, sending INIT_SYNACK")
-        message = dictSend['INIT_SYNACK'] + ',' + MSS_1 + ',' + SN_1 + ',' + VOID_DATA
-        
-        serverSocket.sendto(message.encode(),clientAddress) 
-    elif dictRec[splitPacket[0].decode()] == 'INIT_ACK':
-        # Send back MODE_SYN
-        print("Received INIT_ACK, sending MODE_SYN")
-        message = dictSend['MODE_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + sys_mode
-        serverSocket.sendto(message.encode(),clientAddress)        
-
-        # Wait for MODE_ACK, DATA = "MODE"
-        response, clientAddress = serverSocket.recvfrom(2048)
-
-        # send back FULL_DATA_ACK, DATA = "MODE!VOID"
-        msg_data = sys_mode + '!' + VOID_DATA
-        message = dictSend['FULL_DATA_ACK'] + ',' + MSS_1 + ',' + SN_1 + ',' + msg_data 
-
-        serverSocket.sendto(message.encode(),clientAddress) 
-    elif dictRec[splitPacket[0].decode()] == 'FULL_DATA_SYN':
-        print("Received FULL_DATA_SYN")
+    if dictRec[splitPacket[0].decode()] == 'FULL_DATA_SYN':
         
         sys_mode,data_type = splitData(splitPacket[3])
 
         if data_type == "CAM":
-
-            print("Received Full Picture")
             
             #reset values 
             check_pt = 0
@@ -298,29 +299,24 @@ while True:
         
             decode_string(full_string)
 
-            msg_data = sys_mode + '!' + "CAM"
-
-            message = dictSend['FULL_DATA_ACK'] + ',' + MSS_1 + ',' + SN_1 + ',' + msg_data
+            message = dictSend['FULL_DATA_ACK'] + ",0001,0001," + sys_mode + "!CAM"
             serverSocket.sendto(message.encode(),clientAddress)
         elif data_type == "SEN":
-            msg_data = sys_mode + '!' + "SEN"
 
-            message = dictSend['FULL_DATA_ACK'] + ',' + MSS_1 + ',' + SN_1 + ',' + msg_data
+            message = dictSend['FULL_DATA_ACK'] + ",0001,0001," + sys_mode + "!SEN"
             serverSocket.sendto(message.encode(),clientAddress)
 
     elif dictRec[splitPacket[0].decode()] == 'SYNC_SYN':
-        print("Received SYNC_SYN")
                 
         data_type,SS = splitData(splitPacket[3])
         SegmentSize = int(SS)
 
         msg_data = data_type + '!' + SS
 
-        message = dictSend['SYNC_ACK'] + "," + MSS_1 + ',' + SN_1 + ',' + msg_data
+        message = dictSend['SYNC_ACK'] + ",0001,0001," + msg_data
         serverSocket.sendto(message.encode(), clientAddress)
 
     elif dictRec[splitPacket[0].decode()] == 'DATA_SYN':
-        print("Received DATA_SYN")
         
         data_type,other_data = splitData(splitPacket[3])
 
@@ -337,16 +333,12 @@ while True:
             else:
                 HasLost = True
         elif data_type == "SEN":
-            message = dictSend['DATA_ACK'] + ',' + MSS_1 + ',' + SN_1 + ',' + "SEN!VOID"
+            message = dictSend['DATA_ACK'] + ",0001,0001,SEN!VOID"
             serverSocket.sendto(message.encode(), clientAddress)
 
     elif dictRec[splitPacket[0].decode()] == 'DATA_CAM':
-        print("Received DATA_CAM")
 
-        # Second element = SS
         SegmentSize = int(splitPacket[1])
-
-        # Third element = SN
         SegmentNum = int(splitPacket[2]) 
        
         packetsRec[SegmentNum] = 1
@@ -358,59 +350,56 @@ while True:
             encode_string[SegmentNum] = splitPacket[3]
 
     elif dictRec[splitPacket[0].decode()] == 'DATA_SEN':
-        # handle the sensor data
-
-        print("Recieving Sensor Data")
     
         LS,RS = splitData(splitPacket[3])
 
-        numLEDs = UpdateLidar()
+        UpdateLidar()
         
-        if numLEDs == 0:
-            GPIO.output(GPIO_FRONTLEDSel0, False)
-            GPIO.output(GPIO_FRONTLEDSel1, False)
-            GPIO.output(GPIO_FRONTLEDSel2, False)
-            GPIO.output(GPIO_FRONTLEDEn, False)
-        elif numLEDs == 1:
-            GPIO.output(GPIO_FRONTLEDSel0, False)
-            GPIO.output(GPIO_FRONTLEDSel1, False)
-            GPIO.output(GPIO_FRONTLEDSel2, False)
-            GPIO.output(GPIO_FRONTLEDEn, True)
-        elif numLEDs == 2:
-            GPIO.output(GPIO_FRONTLEDSel0, True)
-            GPIO.output(GPIO_FRONTLEDSel1, False)
-            GPIO.output(GPIO_FRONTLEDSel2, False)
-            GPIO.output(GPIO_FRONTLEDEn, True)
-        elif numLEDs == 3:
-            GPIO.output(GPIO_FRONTLEDSel0, False)
-            GPIO.output(GPIO_FRONTLEDSel1, True)
-            GPIO.output(GPIO_FRONTLEDSel2, False)
-            GPIO.output(GPIO_FRONTLEDEn, True)
-        elif numLEDs == 4:
-            GPIO.output(GPIO_FRONTLEDSel0, True)
-            GPIO.output(GPIO_FRONTLEDSel1, True)
-            GPIO.output(GPIO_FRONTLEDSel2, False)
-            GPIO.output(GPIO_FRONTLEDEn, True)
-        elif numLEDs == 5:
-            GPIO.output(GPIO_FRONTLEDSel0, False)
-            GPIO.output(GPIO_FRONTLEDSel1, False)
-            GPIO.output(GPIO_FRONTLEDSel2, True)
-            GPIO.output(GPIO_FRONTLEDEn, True)
-        elif numLEDs == 6:
-            GPIO.output(GPIO_FRONTLEDSel0, True)
-            GPIO.output(GPIO_FRONTLEDSel1, False)
-            GPIO.output(GPIO_FRONTLEDSel2, True)
-            GPIO.output(GPIO_FRONTLEDEn, True)
-        elif numLEDs == 7:
-            GPIO.output(GPIO_FRONTLEDSel0, False)
-            GPIO.output(GPIO_FRONTLEDSel1, True)
-            GPIO.output(GPIO_FRONTLEDSel2, True)
-            GPIO.output(GPIO_FRONTLEDEn, True)
-        elif numLEDs == 8:
-            GPIO.output(GPIO_FRONTLEDSel0, True)
-            GPIO.output(GPIO_FRONTLEDSel1, True)
-            GPIO.output(GPIO_FRONTLEDSel2, True)
-            GPIO.output(GPIO_FRONTLEDEn, True)
+        if FrontLEDs == 0:
+            GPIO.output(GPIO_LEDSel0, False)
+            GPIO.output(GPIO_LEDSel1, False)
+            GPIO.output(GPIO_LEDSel2, False)
+            GPIO.output(GPIO_LEDEn, False)
+        elif FrontLEDs == 1:
+            GPIO.output(GPIO_LEDSel0, False)
+            GPIO.output(GPIO_LEDSel1, False)
+            GPIO.output(GPIO_LEDSel2, False)
+            GPIO.output(GPIO_LEDEn, True)
+        elif FrontLEDs == 2:
+            GPIO.output(GPIO_LEDSel0, True)
+            GPIO.output(GPIO_LEDSel1, False)
+            GPIO.output(GPIO_LEDSel2, False)
+            GPIO.output(GPIO_LEDEn, True)
+        elif FrontLEDs == 3:
+            GPIO.output(GPIO_LEDSel0, False)
+            GPIO.output(GPIO_LEDSel1, True)
+            GPIO.output(GPIO_LEDSel2, False)
+            GPIO.output(GPIO_LEDEn, True)
+        elif FrontLEDs == 4:
+            GPIO.output(GPIO_LEDSel0, True)
+            GPIO.output(GPIO_LEDSel1, True)
+            GPIO.output(GPIO_LEDSel2, False)
+            GPIO.output(GPIO_LEDEn, True)
+        elif FrontLEDs == 5:
+            GPIO.output(GPIO_LEDSel0, False)
+            GPIO.output(GPIO_LEDSel1, False)
+            GPIO.output(GPIO_LEDSel2, True)
+            GPIO.output(GPIO_LEDEn, True)
+        elif FrontLEDs == 6:
+            GPIO.output(GPIO_LEDSel0, True)
+            GPIO.output(GPIO_LEDSel1, False)
+            GPIO.output(GPIO_LEDSel2, True)
+            GPIO.output(GPIO_LEDEn, True)
+        elif FrontLEDs == 7:
+            GPIO.output(GPIO_LEDSel0, False)
+            GPIO.output(GPIO_LEDSel1, True)
+            GPIO.output(GPIO_LEDSel2, True)
+            GPIO.output(GPIO_LEDEn, True)
+        elif FrontLEDs == 8:
+            GPIO.output(GPIO_LEDSel0, True)
+            GPIO.output(GPIO_LEDSel1, True)
+            GPIO.output(GPIO_LEDSel2, True)
+            GPIO.output(GPIO_LEDEn, True)
 
         # Lighting up LEDs for Side Sensors
         if RS == "Y": 
@@ -426,5 +415,11 @@ while True:
             GPIO.output(GPIO_LEDSLEFT,False)
             print("Turn LEFT LEDS OFF")
     
+    elif dictRec[splitPacket[0].decode()] == 'DCNT':
+        # Handle Disconnect from Client
+        # Turn on Status LED if Disconnect (set True)
+        # Turn off Status LED if Disconnect (set False)
+    
+
     w.update()
     w.update_idletasks()
