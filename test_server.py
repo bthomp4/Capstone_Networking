@@ -234,6 +234,7 @@ if GPIO.input(GPIO_ModeSel):
     sys_mode = "FB"
 else:
     sys_mode = "BS"
+    mode_flag = True
 
 color = False
 serverSocket.setblocking(False) # to allow for the loop to process
@@ -287,7 +288,12 @@ led_flag = False
 while True:
     if led_flag:
         GPIO.setup(GPIO_LEDStatus, GPIO.OUT)
-        GPIO.output(GPIO_LEDStatus, True)
+        if mode_flag:
+            GPIO.output(GPIO_LEDStatus, False)
+            GPIO.output(GPIO_LEDStatus, True)
+        else:
+            GPIO.output(GPIO_LEDStatus, True)
+
     else:
         GPIO.setup(GPIO_LEDStatus, GPIO.IN)
     response, clientAddress = serverSocket.recvfrom(2048)
@@ -304,7 +310,15 @@ while True:
             check_pt = 0
             packetsRec = [0] * MSS        
 
-            full_string = b''
+        if led_flag:
+            GPIO.setup(GPIO_LEDStatus, GPIO.OUT)
+            if mode_flag:
+                GPIO.output(GPIO_LEDStatus, False)
+                GPIO.output(GPIO_LEDStatus, True)
+            else:
+                GPIO.output(GPIO_LEDStatus, True)
+                full_string = b''
+            
             i = 0
 
             while(i < len(encode_string)):
@@ -446,7 +460,16 @@ while True:
         # Turn on Status LED if Disconnect (set True)
         # Turn off Status LED if Disconnect (set False)
         print("Handle DCNT")
-    
+        break
 
     w.update()
     w.update_idletasks()
+
+flash_count = 5
+while (flash_count != 0):
+    GPIO.setup(GPIO_LEDStatus, GPIO.OUT)
+    GPIO.output(GPIO_LEDStatus, False)
+    sleep(0.1)
+    GPIO.setup(GPIO_LEDStatus, GPIO.IN)
+    
+    flash_count = flash_count - 1
