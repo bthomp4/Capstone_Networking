@@ -358,49 +358,61 @@ while True:
     
         LS,RS = splitData(splitPacket[3])
 
-        UpdateLidar()
+        #UpdateLidar()
+
+        # just for testing
+        FrontLEDs = 6
         
         if FrontLEDs == 0:
+            print("Not enabled")
             GPIO.output(GPIO_LEDSel0, False)
             GPIO.output(GPIO_LEDSel1, False)
             GPIO.output(GPIO_LEDSel2, False)
             GPIO.output(GPIO_LEDEn, False)
         elif FrontLEDs == 1:
+            print("One LED on")
             GPIO.output(GPIO_LEDSel0, False)
             GPIO.output(GPIO_LEDSel1, False)
             GPIO.output(GPIO_LEDSel2, False)
             GPIO.output(GPIO_LEDEn, True)
         elif FrontLEDs == 2:
+            print("Two LEDs on")
             GPIO.output(GPIO_LEDSel0, True)
             GPIO.output(GPIO_LEDSel1, False)
             GPIO.output(GPIO_LEDSel2, False)
             GPIO.output(GPIO_LEDEn, True)
         elif FrontLEDs == 3:
+            print("Three LEDs on")
             GPIO.output(GPIO_LEDSel0, False)
             GPIO.output(GPIO_LEDSel1, True)
             GPIO.output(GPIO_LEDSel2, False)
             GPIO.output(GPIO_LEDEn, True)
         elif FrontLEDs == 4:
+            print("Four LEDs on")
             GPIO.output(GPIO_LEDSel0, True)
             GPIO.output(GPIO_LEDSel1, True)
             GPIO.output(GPIO_LEDSel2, False)
             GPIO.output(GPIO_LEDEn, True)
         elif FrontLEDs == 5:
+            print("Five LEDs on")
             GPIO.output(GPIO_LEDSel0, False)
             GPIO.output(GPIO_LEDSel1, False)
             GPIO.output(GPIO_LEDSel2, True)
             GPIO.output(GPIO_LEDEn, True)
         elif FrontLEDs == 6:
+            print("Six LEDs on")
             GPIO.output(GPIO_LEDSel0, True)
             GPIO.output(GPIO_LEDSel1, False)
             GPIO.output(GPIO_LEDSel2, True)
             GPIO.output(GPIO_LEDEn, True)
         elif FrontLEDs == 7:
+            print("Seven LEDs on")
             GPIO.output(GPIO_LEDSel0, False)
             GPIO.output(GPIO_LEDSel1, True)
             GPIO.output(GPIO_LEDSel2, True)
             GPIO.output(GPIO_LEDEn, True)
         elif FrontLEDs == 8:
+            print("Eight LEDs on")
             GPIO.output(GPIO_LEDSel0, True)
             GPIO.output(GPIO_LEDSel1, True)
             GPIO.output(GPIO_LEDSel2, True)
