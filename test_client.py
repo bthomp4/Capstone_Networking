@@ -88,9 +88,9 @@ def TakeMeasurement(Trigger, Echo):
     GPIO.output(Trigger, False)
     start = time()
 
-    while GPIO.output(Echo) == 0:
+    while GPIO.input(Echo) == 0:
         start = time()
-    while GPIO.output(Echo) == 1:
+    while GPIO.input(Echo) == 1:
         stop = time()
     stop = time()
 
