@@ -47,7 +47,7 @@ GPIO_LEDSel0       = 2
 GPIO_LEDSel1       = 14
 GPIO_LEDSel2       = 4    #MSB
 GPIO_LEDEn         = 17
-##GPIO_LEDStatus    = 11
+GPIO_LEDStatus    = 11
 ##GPIO_SafeSD       = 3
 ##GPIO_LBO          = 26
 
@@ -61,7 +61,7 @@ GPIO.setup(GPIO_LEDSel0,GPIO.OUT)
 GPIO.setup(GPIO_LEDSel1,GPIO.OUT)
 GPIO.setup(GPIO_LEDSel2,GPIO.OUT)
 GPIO.setup(GPIO_LEDEn,GPIO.OUT)
-##GPIO.setup(GPIO_LEDStatus, GPIO.OUT)
+GPIO.setup(GPIO_LEDStatus, GPIO.OUT)
 ##GPIO.setup(GPIO_SafeSD, GPIO.IN)
 ##GPIO.setup(GPIO_LBO, GPIO.IN)
 
@@ -72,7 +72,7 @@ GPIO.output(GPIO_LEDSel0, False)
 GPIO.output(GPIO_LEDSel1, False)
 GPIO.output(GPIO_LEDSel2, False)
 GPIO.output(GPIO_LEDEn, False)
-##GPIO.output(GPIO_LEDStatus, False)
+GPIO.output(GPIO_LEDStatus, False)
 
 # ------------------
 # Defining Functions
@@ -235,12 +235,16 @@ if GPIO.input(GPIO_ModeSel):
 else:
     sys_mode = "BS"
 
-
+color = False
 serverSocket.setblocking(False) # to allow for the loop to process
 # Initial Handshaking loop
 while noConnect:
     print("Waiting for connection")
     print("Flash LED")
+    sleep(0.1)
+    color = not color
+    print(color)
+    GPIO.output(GPIO_LEDStatus, color)
     try:
         message_rec = True
         response, clientAddress = serverSocket.recvfrom(2048)
@@ -276,11 +280,16 @@ while noConnect:
 
             serverSocket.sendto(message.encode(),clientAddress) 
 
-
+GPIO.setup(GPIO_LEDStatus, GPIO.IN)
+led_flag = False 
 
 # begin loop
 while True:
-
+    if led_flag:
+        GPIO.setup(GPIO_LEDStatus, GPIO.OUT)
+        GPIO.output(GPIO_LEDStatus, True)
+    else:
+        GPIO.setup(GPIO_LEDStatus, GPIO.IN)
     response, clientAddress = serverSocket.recvfrom(2048)
     splitPacket = response.split(b',')
     print(dictRec[splitPacket[0].decode()])
@@ -290,7 +299,7 @@ while True:
         sys_mode,data_type = splitData(splitPacket[3])
 
         if data_type == "CAM":
-            
+            led_flag = not led_flag        
             #reset values 
             check_pt = 0
             packetsRec = [0] * MSS        
