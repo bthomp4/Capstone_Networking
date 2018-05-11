@@ -107,9 +107,9 @@ def encodeImage():
     cam_pic = Image.open(picture)
     
     cam_pic = cam_pic.resize((800,480),Image.ANTIALIAS)
-    cam_pic.save("test2_scaled.jpg",quality=20) 
+    cam_pic.save("/ram/test2_scaled.jpg",quality=20) 
 
-    with open("test2_scaled.jpg",'rb') as image:
+    with open("/ram/test2_scaled.jpg",'rb') as image:
         image_64_encode = base64.encodestring(image.read())
 
     return image_64_encode
