@@ -229,13 +229,31 @@ w.update()
 
 # Setting the mode of the system
 #sys_mode = "FB"
+loop_count = 0
+color = False
+while loop_count < 15:
+    color = not color
+    sleep(.1)
+    loop_count = loop_count + 1
+
 
 if GPIO.input(GPIO_ModeSel):
     sys_mode = "FB"
 else:
     sys_mode = "BS"
-    mode_flag = True
+loop_count = 0
+while loop_count < 150:
+    if sys_mode == "BS":
+        GPIO.output(GPIO_LEDStatus, False)
+        sleep(.01)
+        GPIO.output(GPIO_LEDStatus, True)
+        sleep(.01)
+    else:
+        GPIO.output(GPIO_LEDStatus, True)
+        sleep(.02)
+    loop_count = loop_count + 1
 
+loop_count = 0
 color = False
 serverSocket.setblocking(False) # to allow for the loop to process
 # Initial Handshaking loop
@@ -288,12 +306,7 @@ led_flag = False
 while True:
     if led_flag:
         GPIO.setup(GPIO_LEDStatus, GPIO.OUT)
-        if mode_flag:
-            GPIO.output(GPIO_LEDStatus, False)
-            GPIO.output(GPIO_LEDStatus, True)
-        else:
-            GPIO.output(GPIO_LEDStatus, True)
-
+        GPIO.output(GPIO_LEDStatus, True)
     else:
         GPIO.setup(GPIO_LEDStatus, GPIO.IN)
     response, clientAddress = serverSocket.recvfrom(2048)
@@ -309,15 +322,7 @@ while True:
             #reset values 
             check_pt = 0
             packetsRec = [0] * MSS        
-
-        if led_flag:
-            GPIO.setup(GPIO_LEDStatus, GPIO.OUT)
-            if mode_flag:
-                GPIO.output(GPIO_LEDStatus, False)
-                GPIO.output(GPIO_LEDStatus, True)
-            else:
-                GPIO.output(GPIO_LEDStatus, True)
-                full_string = b''
+            full_string = b''
             
             i = 0
 
