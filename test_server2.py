@@ -479,8 +479,8 @@ while True:
         # Handle Disconnect from Client
         print("Handle DCNT")
             
-        flash_count = 5
-        while (flash_count != 0):
+        flash_count = 0
+        while (flash_count < 15):
             print("Set LED Status as output")
             #GPIO.setup(GPIO_LED_STAT, GPIO.OUT)
             print("Light LED red")
@@ -489,7 +489,7 @@ while True:
             print("Set LED Status as input")
             #GPIO.setup(GPIO_LED_STAT, GPIO.IN)
     
-            flash_count = flash_count - 1
+            flash_count = flash_count + 1
         break
 
     w.update()
