@@ -10,7 +10,7 @@ import subprocess
 # for encoding the image 
 import base64
 from PIL import Image
-
+from errno import *
 from time import *
 
 # for GPIO Pins (can only be tested on RPi)
@@ -60,7 +60,7 @@ GPIO.setup(GPIO_ECHO_RIGHT,GPIO.IN)     # ECHO RIGHT
 GPIO.setup(GPIO_SAFE_SD, GPIO.IN, pull_up_down = GPIO.PUD_UP)
 GPIO.add_event_detect(GPIO_SAFE_SD, GPIO.FALLING)
 
-GPIO.setup(GPIO_LBO, GPIO.IN)
+GPIO.setup(GPIO_LBO, GPIO.IN, pull_up_down = GPIO.PUD_DOWN)
 GPIO.add_event_detect(GPIO_LBO, GPIO.RISING)
 
 # Set trigger to False (Low)
@@ -172,15 +172,34 @@ def signal_handler(signal,frame):
 signal.signal(signal.SIGINT, signal_handler)
 
 # sending a message to initialize connection
-print("Sending INIT_SYN")
+#print("Sending INIT_SYN")
 message = dictSend["INIT_SYN"] + ",0001,0001,VOID"
 
-client_socket.sendto(message.encode(),(args.server_name,server_port))
+#client_socket.sendto(message.encode(),(args.server_name,server_port))
 
+message_received = False
+client_socket.setblocking(False)
+response = ""
+serverAddress = 0
+
+while not message_received:
+    print("Sending INIT_SYN")
+    client_socket.sendto(message.encode(),(args.server_name,server_port))
+    try:
+        message_received = True
+        response, serverAddress = client_socket.recvfrom(2048)
+    except error as e:
+        if e.errno is 107 or e.errno is 11:
+            message_received = False
+
+client_socket.setblocking(True)
 while True:
 
     # recieving message from server
-    response,serverAddress = client_socket.recvfrom(2048)
+    if not message_received:
+        response,serverAddress = client_socket.recvfrom(2048)
+    message_received = False
+    #response,serverAddress = client_socket.recvfrom(2048)
     splitPacket = response.split(b',')
 
     if GPIO.event_detected(GPIO_SAFE_SD) or GPIO.event_detected(GPIO_LBO):
