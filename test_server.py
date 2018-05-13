@@ -66,7 +66,7 @@ GPIO.setup(GPIO_LED_STAT, GPIO.OUT)
 GPIO.setup(GPIO_SAFE_SD, GPIO.IN, pull_up_down = GPIO.PUD_UP)
 GPIO.add_event_detect(GPIO_SAFE_SD, GPIO.FALLING)
 
-GPIO.setup(GPIO_LBO, GPIO.IN)
+GPIO.setup(GPIO_LBO, GPIO.IN, pull_up_down = GPIO.PUD_DOWN)
 GPIO.add_event_detect(GPIO_LBO, GPIO.RISING)
 
 GPIO.output(GPIO_TRIGGER,False)
@@ -465,11 +465,12 @@ while True:
         print("Handle DCNT")
             
         flash_count = 0
-        while (flash_count < 15):
+        while (flash_count < 50):
             GPIO.setup(GPIO_LED_STAT, GPIO.OUT)
             GPIO.output(GPIO_LED_STAT, False)
             sleep(0.1)
             GPIO.setup(GPIO_LED_STAT, GPIO.IN)
+            sleep(0.1)
     
             flash_count = flash_count + 1
         break
@@ -482,5 +483,5 @@ while True:
 print("Front Unit Shutting Down")
 GPIO.cleanup()
 serverSocket.close()
-subprocess.call(['shutdown', '-h', 'now'], shell=False)
+subprocess.call(['bash_scripts/./ad_connection.sh'], shell=False)
 # -----------------------------------------------------
