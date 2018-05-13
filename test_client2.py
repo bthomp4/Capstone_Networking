@@ -188,7 +188,6 @@ while True:
         # When in Full Battery Mode, turn on Camera
         if (sys_mode == "FB"):
             print("Turn on Camera")
-            camera = PiCamera()
 
         print("Sending MODE_ACK")
         message = dictSend["MODE_ACK"] + ",0001,0001," + sys_mode
@@ -297,7 +296,6 @@ while True:
 
             if data_type == "VOID" or data_type == "SEN":
                 print("Taking Picture")
-                camera.capture(picture)
 
                 string = encodeImage()
 
