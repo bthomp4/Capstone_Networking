@@ -60,8 +60,8 @@ GPIO.setup(GPIO_ECHO_RIGHT,GPIO.IN)     # ECHO RIGHT
 GPIO.setup(GPIO_SAFE_SD, GPIO.IN, pull_up_down = GPIO.PUD_UP)
 GPIO.add_event_detect(GPIO_SAFE_SD, GPIO.FALLING)
 
-GPIO.setup(GPIO_LBO, GPIO.IN, pull_up_down = GPIO.PUD_UP)
-GPIO.add_event_detect(GPIO_LBO, GPIO.FALLING)
+GPIO.setup(GPIO_LBO, GPIO.IN)
+GPIO.add_event_detect(GPIO_LBO, GPIO.RISING)
 
 # Set trigger to False (Low)
 GPIO.output(GPIO_TRIGGER_LEFT, False)
