@@ -1,4 +1,4 @@
-# This program is used for testing the server side w/o using GPIO Pins and using fake data
+# This is the for server program (front unit) and does testing w/o the GPIO Pin and the LidarSensor, sends fake data
 
 from socket import *
 from errno import *
@@ -12,6 +12,7 @@ from time import *
 
 import signal
 import sys
+import subprocess
 
 #import RPi.GPIO as GPIO
 
@@ -33,9 +34,9 @@ cp_value = 1    # SS/cp_value = num of packets sent per check
 packetsRec = [0] * MSS    # stores packets that have been received
 
 # Dictionaries for Flag Values
-dictRec = {'0':'INIT_SYN','1':'INIT_SYNACK','2':'INIT_ACK','3':'FULL_DATA_SYN','4':'FULL_DATA_ACK','5':'SYNC_SYN','6':'SYNC_ACK','7':'DATA_SYN','8':'DATA_ACK','9':'DATA_CAM','A':'DATA_SEN','B':'MODE_SYN','C':'MODE_ACK', 'D':'DCNT'}
+dictRec = {'0':"INIT_SYN",'1':"INIT_SYNACK",'2':"INIT_ACK",'3':"FULL_DATA_SYN",'4':"FULL_DATA_ACK",'5':"SYNC_SYN",'6':"SYNC_ACK",'7':"DATA_SYN",'8':"DATA_ACK",'9':"DATA_CAM",'A':"DATA_SEN",'B':"MODE_SYN",'C':"MODE_ACK", 'D':"DCNT"}
 
-dictSend = {'INIT_SYN':'0','INIT_SYNACK':'1','INIT_ACK':'2','FULL_DATA_SYN':'3','FULL_DATA_ACK':'4','SYNC_SYN':'5','SYNC_ACK':'6','DATA_SYN':'7','DATA_ACK':'8','DATA_CAM':'9','DATA_SEN':'A','MODE_SYN':'B','MODE_ACK':'C','DCNT':'D'}
+dictSend = {"INIT_SYN":'0',"INIT_SYNACK":'1',"INIT_ACK":'2',"FULL_DATA_SYN":'3',"FULL_DATA_ACK":'4',"SYNC_SYN":'5',"SYNC_ACK":'6',"DATA_SYN":'7',"DATA_ACK":'8',"DATA_CAM":'9',"DATA_SEN":'A',"MODE_SYN":'B',"MODE_ACK":'C',"DCNT":'D'}
 
 # GPIO pins (BCM) and their purpose
 #GPIO.setmode(GPIO.BCM)
@@ -49,8 +50,8 @@ GPIO_LED_SEL1   = 14
 GPIO_LED_SEL2   = 4    #MSB
 GPIO_LED_EN     = 17
 GPIO_LED_STAT   = 11
-#GPIO_SAFE_SD  = 3
-#GPIO_LBO      = 26
+GPIO_SAFE_SD    = 3
+GPIO_LBO        = 26
 
 # Set pins as output and input
 #GPIO.setup(GPIO_MODE_SEL,GPIO.IN)
@@ -63,8 +64,12 @@ GPIO_LED_STAT   = 11
 #GPIO.setup(GPIO_LED_SEL2,GPIO.OUT)
 #GPIO.setup(GPIO_LED_EN,GPIO.OUT)
 #GPIO.setup(GPIO_LED_STAT, GPIO.OUT)
-##GPIO.setup(GPIO_SAFE_SD, GPIO.IN)
-##GPIO.setup(GPIO_LBO, GPIO.IN)
+
+#GPIO.setup(GPIO_SAFE_SD, GPIO.IN, pull_up_down = GPIO.PUD_UP)
+#GPIO.add_event_detect(GPIO_SAFE_SD, GPIO.FALLING)
+
+#GPIO.setup(GPIO_LBO, GPIO.IN, pull_up_down = GPIO.PUD_UP)
+#GPIO.add_event_detect(GPIO_LBO, GPIO.FALLING)
 
 #GPIO.output(GPIO_TRIGGER,False)
 #GPIO.output(GPIO_LEDS_RIGHT, False)
@@ -106,16 +111,14 @@ def check_point(SegmentSize):
     global check_pt
     global packetsRec
 
-    print("Check_Pt: " + str(check_pt))
     packet_dropped = -1
     for i in range (check_pt,(check_pt + (SegmentSize//cp_value))):
         if packetsRec[i] == 0:
             packet_dropped = i
             break
-    data = "CAM" + '!' + str(packet_dropped)
 
     # Sending DATA_ACK
-    message = dictSend['DATA_ACK'] + ',0001,0001,' + data
+    message = dictSend["DATA_ACK"] + ",0001,0001,CAM!" + str(packet_dropped)
 
     serverSocket.sendto(message.encode(),clientAddress)
     
@@ -229,14 +232,13 @@ label.pack()
 w.update()
 
 # Setting the mode of the system
+sys_mode = "FB"
 loop_count = 0
 color = False
 while loop_count < 15:
     color = not color
     sleep(.1)
     loop_count = loop_count + 1
-
-sys_mode = "FB"
 
 #if GPIO.input(GPIO_MODE_SEL):
 #    sys_mode = "FB"
@@ -246,14 +248,14 @@ sys_mode = "FB"
 loop_count = 0
 while loop_count < 150:
     if sys_mode == "BS":
-        print("Light up red")
+        print("Light LED red")
         #GPIO.output(GPIO_LED_STAT, False)
         sleep(.01)
-        print("Light up blue")
+        print("Light LED blue")
         #GPIO.output(GPIO_LED_STAT, True)
         sleep(.01)
     else:
-        print("Light up blue")
+        print("Light LED blue") 
         #GPIO.output(GPIO_LED_STAT, True)
         sleep(.02)
     loop_count = loop_count + 1
@@ -268,7 +270,7 @@ while noConnect:
     sleep(0.1)
     color = not color
     print(color)
-    print("Light up ", color)
+    print("Light LED", color)
     #GPIO.output(GPIO_LED_STAT, color)
     try:
         message_rec = True
@@ -282,14 +284,14 @@ while noConnect:
         splitPacket = response.split(b',')
         print(dictRec[splitPacket[0].decode()])
 
-        if dictRec[splitPacket[0].decode()] == 'INIT_SYN':
+        if dictRec[splitPacket[0].decode()] == "INIT_SYN":
             # send back INIT_SYNACK
-            message = dictSend['INIT_SYNACK'] + ',0001,0001,VOID'
+            message = dictSend["INIT_SYNACK"] + ",0001,0001,VOID"
         
             serverSocket.sendto(message.encode(),clientAddress) 
-        elif dictRec[splitPacket[0].decode()] == 'INIT_ACK':
+        elif dictRec[splitPacket[0].decode()] == "INIT_ACK":
             # Send back MODE_SYN
-            message = dictSend['MODE_SYN'] + ',0001,0001,' + sys_mode
+            message = dictSend["MODE_SYN"] + ",0001,0001," + sys_mode
             serverSocket.sendto(message.encode(),clientAddress)        
             print("Sent MODE_SYN")
             noConnect = False
@@ -300,30 +302,34 @@ while noConnect:
             print("Received MODE_ACK")
 
             # send back FULL_DATA_ACK, DATA = "MODE!VOID"
-            msg_data = sys_mode + '!VOID'
-            message = dictSend['FULL_DATA_ACK'] + ',0001,0001,' + msg_data 
+            message = dictSend["FULL_DATA_ACK"] + ",0001,0001," + sys_mode + "!VOID"
 
             serverSocket.sendto(message.encode(),clientAddress) 
 
-print("Set LED_STAT as input pin")
+print("Set LED Status as input pin")
 #GPIO.setup(GPIO_LED_STAT, GPIO.IN)
 led_flag = False 
 
 # begin loop
 while True:
     if led_flag:
-        print("Set LED_STAT as output pin")
+        print("Set LED Status as output pin")
         #GPIO.setup(GPIO_LED_STAT, GPIO.OUT)
-        print("Light up blue")
+        print("Light LED blue")
         #GPIO.output(GPIO_LED_STAT, True)
     else:
-        print("Set LED_STAT as input pin")
+        print("Set LED Status as input pin")
         #GPIO.setup(GPIO_LED_STAT, GPIO.IN)
     response, clientAddress = serverSocket.recvfrom(2048)
     splitPacket = response.split(b',')
     print(dictRec[splitPacket[0].decode()])
 
-    if dictRec[splitPacket[0].decode()] == 'FULL_DATA_SYN':
+    #if GPIO.event_detected(GPIO_SAFE_SD) or GPIO.event_detected(GPIO_LBO):
+    #    message = dictSend["DCNT"] + ",0001,0001,VOID"
+    #    serverSocket.sendto(message.encode(),clientAddress)
+    #    break
+
+    if dictRec[splitPacket[0].decode()] == "FULL_DATA_SYN":
         
         sys_mode,data_type = splitData(splitPacket[3])
 
@@ -342,24 +348,22 @@ while True:
         
             decode_string(full_string)
 
-            message = dictSend['FULL_DATA_ACK'] + ",0001,0001," + sys_mode + "!CAM"
+            message = dictSend["FULL_DATA_ACK"] + ",0001,0001," + sys_mode + "!CAM"
             serverSocket.sendto(message.encode(),clientAddress)
         elif data_type == "SEN":
 
-            message = dictSend['FULL_DATA_ACK'] + ",0001,0001," + sys_mode + "!SEN"
+            message = dictSend["FULL_DATA_ACK"] + ",0001,0001," + sys_mode + "!SEN"
             serverSocket.sendto(message.encode(),clientAddress)
 
-    elif dictRec[splitPacket[0].decode()] == 'SYNC_SYN':
+    elif dictRec[splitPacket[0].decode()] == "SYNC_SYN":
                 
         data_type,SS = splitData(splitPacket[3])
         SegmentSize = int(SS)
 
-        msg_data = data_type + '!' + SS
-
-        message = dictSend['SYNC_ACK'] + ",0001,0001," + msg_data
+        message = dictSend["SYNC_ACK"] + ",0001,0001," + data_type + '!' + SS
         serverSocket.sendto(message.encode(), clientAddress)
 
-    elif dictRec[splitPacket[0].decode()] == 'DATA_SYN':
+    elif dictRec[splitPacket[0].decode()] == "DATA_SYN":
         
         data_type,other_data = splitData(splitPacket[3])
 
@@ -376,10 +380,10 @@ while True:
             else:
                 hasLost = True
         elif data_type == "SEN":
-            message = dictSend['DATA_ACK'] + ",0001,0001,SEN!VOID"
+            message = dictSend["DATA_ACK"] + ",0001,0001,SEN!VOID"
             serverSocket.sendto(message.encode(), clientAddress)
 
-    elif dictRec[splitPacket[0].decode()] == 'DATA_CAM':
+    elif dictRec[splitPacket[0].decode()] == "DATA_CAM":
 
         SegmentSize = int(splitPacket[1])
         SegmentNum = int(splitPacket[2]) 
@@ -392,14 +396,15 @@ while True:
         else:
             encode_string[SegmentNum] = splitPacket[3]
 
-    elif dictRec[splitPacket[0].decode()] == 'DATA_SEN':
+    elif dictRec[splitPacket[0].decode()] == "DATA_SEN":
     
         LS,RS = splitData(splitPacket[3])
 
         #UpdateLidar()
 
-        # just for testing
-        frontLEDs = 6
+        # Just for testing purposes
+
+        frontLEDs = 5
         
         if frontLEDs == 0:
             print("Not enabled")
@@ -470,24 +475,30 @@ while True:
             #GPIO.output(GPIO_LEDS_LEFT,False)
             print("Turn LEFT LEDS OFF")
     
-    elif dictRec[splitPacket[0].decode()] == 'DCNT':
+    elif dictRec[splitPacket[0].decode()] == "DCNT":
         # Handle Disconnect from Client
-        # Turn on Status LED if Disconnect (set True)
-        # Turn off Status LED if Disconnect (set False)
         print("Handle DCNT")
+            
+        flash_count = 5
+        while (flash_count != 0):
+            print("Set LED Status as output")
+            #GPIO.setup(GPIO_LED_STAT, GPIO.OUT)
+            print("Light LED red")
+            #GPIO.output(GPIO_LED_STAT, False)
+            sleep(0.1)
+            print("Set LED Status as input")
+            #GPIO.setup(GPIO_LED_STAT, GPIO.IN)
+    
+            flash_count = flash_count - 1
         break
 
     w.update()
     w.update_idletasks()
 
-flash_count = 5
-while (flash_count != 0):
-    print("Set LED Stat as output pin")
-    #GPIO.setup(GPIO_LED_STAT, GPIO.OUT)
-    print("Light up red")
-    #GPIO.output(GPIO_LED_STAT, False)
-    sleep(0.1)
-    print("Set LED Stat as input pin")
-    #GPIO.setup(GPIO_LED_STAT, GPIO.IN)
-    
-    flash_count = flash_count - 1
+# Front Unit Shutting Down 
+# -----------------------------------------------------
+print("Front Unit Shutting Down")
+GPIO.cleanup()
+serverSocket.close()
+subprocess.call(['shutdown', '-h', 'now'], shell=False)
+# -----------------------------------------------------
