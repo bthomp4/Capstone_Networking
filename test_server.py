@@ -230,7 +230,6 @@ label.pack()
 w.update()
 
 # Setting the mode of the system
-#sys_mode = "FB"
 loop_count = 0
 color = False
 while loop_count < 15:
@@ -242,6 +241,7 @@ if GPIO.input(GPIO_MODE_SEL):
     sys_mode = "FB"
 else:
     sys_mode = "BS"
+
 loop_count = 0
 while loop_count < 150:
     if sys_mode == "BS":
