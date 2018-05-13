@@ -66,8 +66,8 @@ GPIO.setup(GPIO_LED_STAT, GPIO.OUT)
 GPIO.setup(GPIO_SAFE_SD, GPIO.IN, pull_up_down = GPIO.PUD_UP)
 GPIO.add_event_detect(GPIO_SAFE_SD, GPIO.FALLING)
 
-GPIO.setup(GPIO_LBO, GPIO.IN, pull_up_down = GPIO.PUD_UP)
-GPIO.add_event_detect(GPIO_LBO, GPIO.FALLING)
+GPIO.setup(GPIO_LBO, GPIO.IN)
+GPIO.add_event_detect(GPIO_LBO, GPIO.RISING)
 
 GPIO.output(GPIO_TRIGGER,False)
 GPIO.output(GPIO_LEDS_RIGHT, False)
