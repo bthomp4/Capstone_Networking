@@ -5,6 +5,7 @@ import argparse
 
 import signal
 import sys
+import subprocess
 
 # for encoding the image 
 import base64
@@ -21,58 +22,51 @@ from picamera import PiCamera
 # Defining Variables
 # ------------------
 
-# Use BCM GPIO references
-# instead of physical pin numbers
-GPIO.setmode(GPIO.BCM)
-
-# Define GPIO to use on Pi
-GPIO_TRIGGER_LEFT  = 23
-GPIO_ECHO_LEFT     = 24
-GPIO_TRIGGER_RIGHT = 5
-GPIO_ECHO_RIGHT    = 6
-#GPIO_SAFE_SD      = 3
-#GPIO_LBO          = 26 
-
-# Speed of sound in in/s at temperature
-speedSound = 13500 # in/s
-
-# Set pins as output and input
-GPIO.setup(GPIO_TRIGGER_LEFT,GPIO.OUT) # Trigger LEFT
-GPIO.setup(GPIO_ECHO_LEFT,GPIO.IN)     # Echo LEFT
-GPIO.setup(GPIO_TRIGGER_RIGHT,GPIO.OUT) # Trigger RIGHT
-GPIO.setup(GPIO_ECHO_RIGHT,GPIO.IN)     # ECHO RIGHT
-#GPIO.setup(GPIO_SAFE_SD, GPIO.IN)
-#GPIO.setup(GPIO_LBO, GPIO.IN)
-
-# Set trigger to False (Low)
-GPIO.output(GPIO_TRIGGER_LEFT, False)
-GPIO.output(GPIO_TRIGGER_RIGHT, False)
-
-# Set file names
+# Set Variables
 picture = "/ram/test.jpg"
-
-# Set variables
-DATA_SIZE   = 500
+DATA_SIZE = 500
 SS_FlagSize = 4
 SN_FlagSize = 4
 DCNT_flag   = 0
 measurementSleep = 0.00001
 settleSleep      = 0.5
 sideSensorRange  = 120
+cp = 1 # check point divider value
+encode_msgs = []
+sys_mode = " " # mode of the system (FB or BS)
+speedSound = 13500 # speed of sound in in/s
 
 # Dictionaries for Flag Values
 dictRec = {'0':"INIT_SYN",'1':"INIT_SYNACK",'2':"INIT_ACK",'3':"FULL_DATA_SYN",'4':"FULL_DATA_ACK",'5':"SYNC_SYN",'6':"SYNC_ACK",'7':"DATA_SYN",'8':"DATA_ACK",'9':"DATA_CAM",'A':"DATA_SEN",'B':"MODE_SYN",'C':"MODE_ACK",'D':"DCNT"}
 
 dictSend = {"INIT_SYN":'0',"INIT_SYNACK":'1',"INIT_ACK":'2',"FULL_DATA_SYN":'3',"FULL_DATA_ACK":'4',"SYNC_SYN":'5',"SYNC_ACK":'6',"DATA_SYN":'7',"DATA_ACK":'8',"DATA_CAM":'9',"DATA_SEN":'A',"MODE_SYN":'B',"MODE_ACK":'C', "DCNT":'D'}
 
-# check point divider value
-cp = 1
+# GPIO pins (BCM) and their purpose
+GPIO.setmode(GPIO.BCM)
+GPIO_TRIGGER_LEFT  = 23
+GPIO_ECHO_LEFT     = 24
+GPIO_TRIGGER_RIGHT = 5
+GPIO_ECHO_RIGHT    = 6
+GPIO_SAFE_SD       = 3
+GPIO_LBO           = 26 
 
-# initialize encode_msgs list
-encode_msgs = []
+# Set pins as output and input
+GPIO.setup(GPIO_TRIGGER_LEFT,GPIO.OUT) # Trigger LEFT
+GPIO.setup(GPIO_ECHO_LEFT,GPIO.IN)     # Echo LEFT
+GPIO.setup(GPIO_TRIGGER_RIGHT,GPIO.OUT) # Trigger RIGHT
+GPIO.setup(GPIO_ECHO_RIGHT,GPIO.IN)     # ECHO RIGHT
 
-# for the mode of the system, FB or BS
-sys_mode = " "
+# For handling Safe Shutdown and LBO
+GPIO.setup(GPIO_SAFE_SD, GPIO.IN, pull_up_down = GPIO.PUD_UP)
+GPIO.add_event_detect(GPIO_SAFE_SD, GPIO.FALLING)
+
+GPIO.setup(GPIO_LBO, GPIO.IN, pull_up_down = GPIO.PUD_UP)
+GPIO.add_event_detect(GPIO_LBO, GPIO.FALLING)
+
+# Set trigger to False (Low)
+GPIO.output(GPIO_TRIGGER_LEFT, False)
+GPIO.output(GPIO_TRIGGER_RIGHT, False)
+
 
 # -------------------
 # Defining Functions
@@ -188,6 +182,11 @@ while True:
     # recieving message from server
     response,serverAddress = client_socket.recvfrom(2048)
     splitPacket = response.split(b',')
+
+    if GPIO.event_detected(GPIO_SAFE_SD) or GPIO.event_detected(GPIO_LBO):
+        message = dictSend["DCNT"] + ",0001,0001,VOID"
+        client_socket.sendto(message.encode(),(args.server_name,server_port))
+        break
 
     if dictRec[splitPacket[0].decode()] == "INIT_SYNACK":
         # send back an INIT_ACK
@@ -344,4 +343,15 @@ while True:
             # Only sending sensor data since display is turned off
             message = dictSend["SYNC_SYN"] + ",0001,0001,SEN!1"
             client_socket.sendto(message.encode(), (args.server_name,server_port))
+
+    elif dictRec[splitPacket[0].decode()] == "DCNT":
+        print("Handling a DCNT from the server")
+        break
+
+# Rear Unit Shutting down
+# -----------------------------------------------------
+print("Rear Unit Shutting Down")
+GPIO.cleanup()
 client_socket.close()
+subprocess.call(['shutdown', '-h', 'now'], shell=False)
+# -----------------------------------------------------
