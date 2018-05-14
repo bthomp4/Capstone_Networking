@@ -79,7 +79,7 @@ GPIO.output(GPIO_TRIGGER_RIGHT, False)
 # -----------------------------------
 def TakeMeasurement(Trigger, Echo):
     GPIO.output(Trigger, True)
-    sleep(takeMeasurement_sleep)
+    sleep(measurementSleep)
     GPIO.output(Trigger, False)
     start = time()
 
@@ -181,10 +181,13 @@ args = parser.parse_args()
 message = dictSend["INIT_SYN"] + ",0001,0001,VOID"
 
 message_received = False
+
+# Set to false to allow for the connection loop to proceed
 client_socket.setblocking(False)
 response = ""
 serverAddress = 0
 
+# Keep trying to connect to a server until a connection is reached
 while not message_received:
     client_socket.sendto(message.encode(),(args.server_name,server_port))
     try:
