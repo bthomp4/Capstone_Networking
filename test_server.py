@@ -202,6 +202,26 @@ def UpdateLidar():
             frontLEDs = 1
             break
 
+# ------------
+# disconnect
+# ------------
+def disconnect():
+
+    flash_count = 0
+    while (flash_count < 50):
+        GPIO.setup(GPIO_LED_STAT, GPIO.OUT)
+        GPIO.output(GPIO_LED_STAT, False)
+        sleep(0.1)
+        GPIO.setup(GPIO_LED_STAT, GPIO.IN)
+        sleep(0.1)
+    
+        flash_count = flash_count + 1
+
+    print("Front Unit Shutting Down")
+    GPIO.cleanup()
+    serverSocket.close()
+    subprocess.call(['bash_scripts/./ad_connection.sh'], shell=False)
+
 # ---------------
 # Main Script
 # ---------------
@@ -296,8 +316,10 @@ while noConnect:
 
             # send back FULL_DATA_ACK, DATA = "MODE!VOID"
             message = dictSend["FULL_DATA_ACK"] + ",0001,0001," + sys_mode + "!VOID"
-
             serverSocket.sendto(message.encode(),clientAddress) 
+
+        elif dictRec[splitPacket[0].decode()] == "DCNT":
+            disconnect()
 
 GPIO.setup(GPIO_LED_STAT, GPIO.IN)
 led_flag = False 
@@ -316,7 +338,7 @@ while True:
     if GPIO.event_detected(GPIO_SAFE_SD) or GPIO.event_detected(GPIO_LBO):
         message = dictSend["DCNT"] + ",0001,0001,VOID"
         serverSocket.sendto(message.encode(),clientAddress)
-        break
+        disconnect()
 
     if dictRec[splitPacket[0].decode()] == "FULL_DATA_SYN":
         
@@ -463,25 +485,15 @@ while True:
     elif dictRec[splitPacket[0].decode()] == "DCNT":
         # Handle Disconnect from Client
         print("Handle DCNT")
-            
-        flash_count = 0
-        while (flash_count < 50):
-            GPIO.setup(GPIO_LED_STAT, GPIO.OUT)
-            GPIO.output(GPIO_LED_STAT, False)
-            sleep(0.1)
-            GPIO.setup(GPIO_LED_STAT, GPIO.IN)
-            sleep(0.1)
-    
-            flash_count = flash_count + 1
-        break
+        disconnect()    
 
     w.update()
     w.update_idletasks()
 
 # Front Unit Shutting Down 
 # -----------------------------------------------------
-print("Front Unit Shutting Down")
-GPIO.cleanup()
-serverSocket.close()
-subprocess.call(['bash_scripts/./ad_connection.sh'], shell=False)
+#print("Front Unit Shutting Down")
+#GPIO.cleanup()
+#serverSocket.close()
+#subprocess.call(['bash_scripts/./ad_connection.sh'], shell=False)
 # -----------------------------------------------------
