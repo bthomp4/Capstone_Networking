@@ -1,15 +1,16 @@
-# This program will be the final version for the Client program
+# This is the final version of the client program for the rear unit
 
 from socket import *
 import argparse
 
 import signal
 import sys
+import subprocess
 
 # for encoding the image
 import base64
 from PIL import Image
-
+from errno import *
 from time import *
 
 # For GPIO Pins
@@ -21,8 +22,27 @@ from picamera import PiCamera
 # Defining Variables
 # ------------------
 
-# Use BCM GPIO references
-# instead of physical pin numbers
+# Set file names
+picture = "/ram/cameraPic.jpg"
+scaledPic = "/ram/cameraPic_scaled.jpg"
+DATA_SIZE   = 500
+SS_FlagSize = 4
+SN_FlagSize = 4
+DCNT_flag   = 0
+measurementSleep = 0.00001
+settleSleep      = 0.5
+sideSensorRange  = 120
+cp = 1 # check point divider value
+encode_msgs = []
+sys_mode = " " # mode of the system (FB or BS)
+speedSound = 13500 # speed of sound in in/s
+
+# Dictionaries for Flag Values
+dictRec = {'0':"INIT_SYN",'1':"INIT_SYNACK",'2':"INIT_ACK",'3':"FULL_DATA_SYN",'4':"FULL_DATA_ACK",'5':"SYNC_SYN",'6':"SYNC_ACK",'7':"DATA_SYN",'8':"DATA_ACK",'9':"DATA_CAM",'A':"DATA_SEN",'B':"MODE_SYN",'C':"MODE_ACK",'D':"DCNT"}
+
+dictSend = {"INIT_SYN":'0',"INIT_SYNACK":'1',"INIT_ACK":'2',"FULL_DATA_SYN":'3',"FULL_DATA_ACK":'4',"SYNC_SYN":'5',"SYNC_ACK":'6',"DATA_SYN":'7',"DATA_ACK":'8',"DATA_CAM":'9',"DATA_SEN":'A',"MODE_SYN":'B',"MODE_ACK":'C', "DCNT":'D'}
+
+# GPIO pins (BCM) and their purpose
 GPIO.setmode(GPIO.BCM)
 
 # Define GPIO to use on Pi
@@ -30,9 +50,8 @@ GPIO_TRIGGER_LEFT  = 23
 GPIO_ECHO_LEFT     = 24
 GPIO_TRIGGER_RIGHT = 5
 GPIO_ECHO_RIGHT    = 6
-
-# Speed of sound in in/s at temperature
-speedSound = 13500 # in/s
+GPIO_SAFE_SD       = 3
+GPIO_LBO           = 26
 
 # Set pins as output and input
 GPIO.setup(GPIO_TRIGGER_LEFT,GPIO.OUT)  # Trigger LEFT
@@ -40,39 +59,16 @@ GPIO.setup(GPIO_ECHO_LEFT,GPIO.IN)      # Echo LEFT
 GPIO.setup(GPIO_TRIGGER_RIGHT,GPIO.OUT) # Trigger RIGHT
 GPIO.setup(GPIO_ECHO_RIGHT,GPIO.IN)     # ECHO RIGHT
 
+# For handling Safe Shutdown and LBO
+GPIO.setup(GPIO_SAFE_SD, GPIO.IN, pull_up_down = GPIO.PUD_UP)
+GPIO.add_event_detect(GPIO_SAFE_SD, GPIO.FALLING)
+
+GPIO.setup(GPIO_LBO, GPIO.IN, pull_up_down = GPIO.PUD_DOWN)
+GPIO.add_event_detect(GPIO_LBO, GPIO.RISING)
+
 # Set trigger to False (Low)
 GPIO.output(GPIO_TRIGGER_LEFT, False)
 GPIO.output(GPIO_TRIGGER_RIGHT, False)
-
-# Set file names
-picture = "/ram/cameraPic.jpg"
-scaledPic = "cameraPic_scaled.jpg"
-
-# Set variables
-DATA_SIZE   = 500
-MSS_1       = "0001"
-SN_1        = "0001"
-VOID_DATA   = "VOID"
-SS_FlagSize = 4
-SN_FlagSize = 4
-DCNT_flag   = 0
-takeMeasurement_sleep = 0.00001
-settleModule_sleep    = 0.5
-sideSensorRange = 120
-
-# Dictionaries for Flag Values
-dictRec = {'0':'INIT_SYN','1':'INIT_SYNACK','2':'INIT_ACK','3':'FULL_DATA_SYN','4':'FULL_DATA_ACK','5':'SYNC_SYN','6':'SYNC_ACK','7':'DATA_SYN','8':'DATA_ACK','9':'DATA_CAM','A':'DATA_SEN','B':'MODE_SYN','C':'MODE_ACK'}
-
-dictSend = {'INIT_SYN':'0','INIT_SYNACK':'1','INIT_ACK':'2','FULL_DATA_SYN':'3','FULL_DATA_ACK':'4','SYNC_SYN':'5','SYNC_ACK':'6','DATA_SYN':'7','DATA_ACK':'8','DATA_CAM':'9','DATA_SEN':'A','MODE_SYN':'B','MODE_ACK':'C'}
-
-# check point divider value
-cp = 1
-
-# initialize encode_msgs list
-encode_msgs = []
-
-# for the mode of the system, FB or BS
-sys_mode = " "
 
 # -------------------
 # Defining Functions
@@ -130,12 +126,12 @@ def UpdateSideSensors():
 
     for i in range( 0,n ):
         leftMeasure = TakeMeasurement(GPIO_TRIGGER_LEFT, GPIO_ECHO_LEFT)
-        sleep(betweenMeasurements_sleep)
+        sleep(measurementSleep)
         if (leftMeasure < sideSensorRange):
             print(str(i) + "Left Measure" + str(leftMeasure))
             numPingLeft = numPingLeft + 1
         rightMeasure = TakeMeasurement(GPIO_TRIGGER_RIGHT, GPIO_ECHO_RIGHT)
-        sleep(betweenMeasurements_sleep)
+        sleep(measurementSleep)
         if (rightMeasure < sideSensorRange):
             print(str(i) + "Right Measure" + str(rightMeasure))
             numPingRight = numPingRight + 1
@@ -157,12 +153,22 @@ def splitData(data):
 
     return data1, data2
 
+# ------------------------------
+# disconnect
+# ------------------------------
+def disconnect():
+    print("Rear Unit Shutting Down")
+    GPIO.cleanup()
+    client_socket.close()
+    subprocess.call(['shutdown', '-h', '.08'], shell=False)
+    sys.exit(0)
+
 # ---------------
 # Main Script
 # ---------------
 
 # Allow time for GPIO to set up
-sleep(settleModule_sleep)
+sleep(settleSleep)
 
 server_port = 12000
 client_socket = socket(AF_INET,SOCK_DGRAM)
@@ -171,29 +177,42 @@ parser = argparse.ArgumentParser(description='sending images')
 parser.add_argument('-s', dest='server_name', help='specifies the IP of the server, this is required', required=True)
 args = parser.parse_args()
 
-def signal_handler(signal,frame):
-    GPIO.cleanup()
-    client_socket.close()
-    sys.exit(0)
-
-signal.signal(signal.SIGINT, signal_handler)
-
 # sending a message to initialize connection
-message = dictSend['INIT_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + VOID_DATA
+message = dictSend["INIT_SYN"] + ",0001,0001,VOID"
 
-client_socket.sendto(message.encode(),(args.server_name,server_port))
+message_received = False
+client_socket.setblocking(False)
+response = ""
+serverAddress = 0
 
+while not message_received:
+    client_socket.sendto(message.encode(),(args.server_name,server_port))
+    try:
+        message_received = True
+        response, serverAddress = client_socket.recvfrom(2048)
+    except error as e:
+        if e.errno is 107 or e.errno is 11:
+            message_received = False
+
+client_socket.setblocking(True)
 while True:
 
     # recieving message from server
-    response,serverAddress = client_socket.recvfrom(2048)
+    if not message_received:
+        response,serverAddress = client_socket.recvfrom(2048)
+    message_received = False
     splitPacket = response.split(b',')
 
-    if dictRec[splitPacket[0].decode()] == 'INIT_SYNACK':
-        # send back an INIT_ACK
-        message = dictSend['INIT_ACK'] + ',' + MSS_1 + ',' + SN_1 + ',' + VOID_DATA
+    if GPIO.event_detected(GPIO_SAFE_SD) or GPIO.event_detected(GPIO_LBO):
+        message = dictSend["DCNT"] + ",0001,0001,VOID"
         client_socket.sendto(message.encode(),(args.server_name,server_port))
-    elif dictRec[splitPacket[0].decode()] == 'MODE_SYN':
+        disconnect()
+
+    if dictRec[splitPacket[0].decode()] == "INIT_SYNACK":
+        # send back an INIT_ACK
+        message = dictSend["INIT_ACK"] + ",0001,0001,VOID"
+        client_socket.sendto(message.encode(),(args.server_name,server_port))
+    elif dictRec[splitPacket[0].decode()] == "MODE_SYN":
         # Send back MODE_ACK
         sys_mode = splitPacket[3].decode()
 
@@ -201,9 +220,9 @@ while True:
         if (sys_mode == "FB"):
             camera = PiCamera()
 
-        message = dictSend['MODE_ACK'] + ',' + MSS_1 + ',' + SN_1 + ',' + sys_mode
+        message = dictSend["MODE_ACK"] + ",0001,0001," + sys_mode
         client_socket.sendto(message.encode(),(args.server_name,server_port))
-    elif dictRec[splitPacket[0].decode()] == 'SYNC_ACK':
+    elif dictRec[splitPacket[0].decode()] == "SYNC_ACK":
 
         data_type,SS = splitData(splitPacket[3])
 
@@ -227,7 +246,7 @@ while True:
                         SN = '0' + SN
 
                 # Sending Camera Data
-                packetInfo = dictSend['DATA_CAM'] + ',' + SS + ',' + SN + ','
+                packetInfo = dictSend["DATA_CAM"] + ',' + SS + ',' + SN + ','
 
                 client_socket.sendto(packetInfo.encode() + data, (args.server_name,server_port))
 
@@ -238,13 +257,16 @@ while True:
                     packet_count = 0
 
                     # sending Data_Syn to server
-                    msg_data = "CAM!" + SS
-                    message = dictSend['DATA_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + msg_data
+                    message = dictSend["DATA_SYN"] + ",0001,0001,CAM!" + SS
                     client_socket.sendto(message.encode(), (args.server_name,server_port))
 
                     # waiting to see if all packets have been recieved
                     response,serverAddress = client_socket.recvfrom(2048)
                     splitResponse = response.split(b',')
+
+                    # Check if response was a disconnect message
+                    if dictRec[splitPacket[0].decode()] == "DCNT":
+                        disconnect()
 
                     data_type,other = splitData(splitResponse[3])
 
@@ -257,46 +279,51 @@ while True:
                             if (len(SN) != SN_FlagSize):
                                 for l in range(0,(SN_FlagSize + len(SN))):
                                     SN = '0' + SN
-                            message = dictSend['DATA_CAM'] + ',' + SS + ',' + SN + ','
+                            message = dictSend["DATA_CAM"] + ',' + SS + ',' + SN + ','
                             client_socket.sendto(message.encode() + data, (args.server_name, server_port))
 
                         # sending data syn to server
-                        msg_data = "CAM!" + SS
-                        message = dictSend['DATA_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + msg_data
+                        message = dictSend["DATA_SYN"] + ",0001,0001,CAM!" + SS
                         client_socket.sendto(message.encode(), (args.server_name,server_port))
                         response,serverAddress = client_socket.recvfrom(2048)
                         splitResponse = response.split(b',')
+
+                        # Check if response was a disconnect message
+                        if dictRec[splitPacket[0].decode()] == "DCNT":
+                            disconnect()
 
                         data_type,other = splitData(splitResponse[3])
 
                         packet_lost = int(other)
                 num_packet = num_packet + 1
 
-            msg_data = sys_mode + '!' + "CAM"
-            message = dictSend['FULL_DATA_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + msg_data
+            message = dictSend["FULL_DATA_SYN"] + ",0001,0001," + sys_mode + "!CAM"
             client_socket.sendto(message.encode(),(args.server_name,server_port))
         elif data_type == "SEN":
             # Send DATA_SEN message
             LS, RS = UpdateSideSensors()
 
-            msg_data = LS + '!' + RS
-
-            message = dictSend['DATA_SEN'] + ',' + MSS_1 + ',' + SN_1 + ',' + msg_data
+            message = dictSend["DATA_SEN"] + ",0001,0001," + LS + '!' + RS
             client_socket.sendto(message.encode(), (args.server_name,server_port))
 
             # Send DATA_SYN
-            message = dictSend['DATA_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + "SEN!VOID"
+            message = dictSend["DATA_SYN"] + ",0001,0001,SEN!VOID"
             client_socket.sendto(message.encode(), (args.server_name,server_port))
 
             # Wait for DATA_ACK from Server
             response,serverAddress = client_socket.recvfrom(2048)
+            splitResponse = response.split(b',')
+
+
+            # Check if response was a disconnect message
+            if dictRec[splitPacket[0].decode()] == "DCNT":
+                disconnect()
 
             # Then send a FULL_DATA_SYN
-            msg_data = sys_mode + '!' + "SEN"
-            message = dictSend['FULL_DATA_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + msg_data
+            message = dictSend["FULL_DATA_SYN"] + ",0001,0001," + sys_mode + "!SEN"
             client_socket.sendto(message.encode(), (args.server_name,server_port))
 
-    elif dictRec[splitPacket[0].decode()] == 'FULL_DATA_ACK':
+    elif dictRec[splitPacket[0].decode()] == "FULL_DATA_ACK":
 
         sys_mode,data_type = splitData(splitPacket[3])
 
@@ -323,17 +350,18 @@ while True:
                         SS = '0' + SS
 
                 #Sending SYNC_SYN message
-                msg_data = "CAM" + '!' + SS
-                message = dictSend['SYNC_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + msg_data
-
+                message = dictSend["SYNC_SYN"] + ",0001,0001,CAM!" + SS
                 client_socket.sendto(message.encode(), (args.server_name,server_port))
             elif data_type == "CAM":
                 # send SYNC_SYN for SENSOR
 
-                message = dictSend['SYNC_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + "SEN!1"
+                message = dictSend["SYNC_SYN"] + ",0001,0001,SEN!1"
                 client_socket.sendto(message.encode(), (args.server_name,server_port))
         elif sys_mode == "BS":
             # Only sending sensor data since display is turned off
-            message = dictSend['SYNC_SYN'] + ',' + MSS_1 + ',' + SN_1 + ',' + "SEN!1"
+            message = dictSend["SYNC_SYN"] + ",0001,0001,SEN!1"
             client_socket.sendto(message.encode(), (args.server_name,server_port))
-client_socket.close()
+
+    elif dictRec[splitPacket[0].decode()] == "DCNT":
+        print("Handling a DCNT from the server")
+        disconnect()
