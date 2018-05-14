@@ -158,7 +158,7 @@ def disconnect():
     print("Rear Unit Shutting Down")
     GPIO.cleanup()
     client_socket.close()
-    subprocess.call(['shutdown', '-h', 'now'], shell=False)
+    #subprocess.call(['shutdown', '-h', 'now'], shell=False)
 
 # ---------------
 # Main Script
@@ -183,10 +183,7 @@ signal.signal(signal.SIGINT, signal_handler)
 # ------------------------------
 
 # sending a message to initialize connection
-#print("Sending INIT_SYN")
 message = dictSend["INIT_SYN"] + ",0001,0001,VOID"
-
-#client_socket.sendto(message.encode(),(args.server_name,server_port))
 
 message_received = False
 client_socket.setblocking(False)
