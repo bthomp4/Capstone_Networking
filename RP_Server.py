@@ -295,7 +295,7 @@ led_flag = False
 
 # begin loop
 while True:
-   if led_flag:
+    if led_flag:
         GPIO.setup(GPIO_LED_STAT, GPIO.OUT)
         GPIO.output(GPIO_LED_STAT, True)
     else:
