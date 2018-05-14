@@ -220,7 +220,7 @@ def disconnect():
     print("Front Unit Shutting Down")
     GPIO.cleanup()
     serverSocket.close()
-    subprocess.call(['bash_scripts/./ad_connection.sh'], shell=False)
+    #subprocess.call(['bash_scripts/./ad_connection.sh'], shell=False)
 
 # ---------------
 # Main Script
