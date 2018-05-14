@@ -158,6 +158,7 @@ def disconnect():
     print("Rear Unit Shutting Down")
     GPIO.cleanup()
     client_socket.close()
+    sys.exit(0)
     #subprocess.call(['shutdown', '-h', 'now'], shell=False)
 
 # ---------------
@@ -328,7 +329,9 @@ while True:
             # Wait for DATA_ACK from Server
             print("Receiving DATA_ACK")
             response,serverAddress = client_socket.recvfrom(2048)
-            
+            splitResponse = response.split(b',')
+
+
             # Check if response was a disconnect message
             if dictRec[splitPacket[0].decode()] == "DCNT":
                 disconnect()
