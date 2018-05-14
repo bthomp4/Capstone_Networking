@@ -220,8 +220,8 @@ def disconnect():
     print("Front Unit Shutting Down")
     GPIO.cleanup()
     serverSocket.close()
+    subprocess.call(['shutdown','-h','.08'], shell=False)
     sys.exit(0)
-    #subprocess.call(['shutdown','-h'.'now'], shell=False)
 
 # ---------------
 # Main Script
