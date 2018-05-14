@@ -151,6 +151,15 @@ def splitData(data):
 
     return data1, data2
 
+# ------------------------------
+# disconnect
+# ------------------------------
+def disconnect():
+    print("Rear Unit Shutting Down")
+    GPIO.cleanup()
+    client_socket.close()
+    subprocess.call(['shutdown', '-h', 'now'], shell=False)
+
 # ---------------
 # Main Script
 # ---------------
@@ -164,12 +173,14 @@ parser = argparse.ArgumentParser(description='sending images')
 parser.add_argument('-s', dest='server_name', help='specifies the IP of the server, this is required', required=True)
 args = parser.parse_args()
 
+# Remove later ------------------
 def signal_handler(signal,frame):
     GPIO.cleanup()
     client_socket.close()
     sys.exit(0)
 
 signal.signal(signal.SIGINT, signal_handler)
+# ------------------------------
 
 # sending a message to initialize connection
 #print("Sending INIT_SYN")
@@ -199,13 +210,12 @@ while True:
     if not message_received:
         response,serverAddress = client_socket.recvfrom(2048)
     message_received = False
-    #response,serverAddress = client_socket.recvfrom(2048)
     splitPacket = response.split(b',')
 
     if GPIO.event_detected(GPIO_SAFE_SD) or GPIO.event_detected(GPIO_LBO):
         message = dictSend["DCNT"] + ",0001,0001,VOID"
         client_socket.sendto(message.encode(),(args.server_name,server_port))
-        break
+        disconnect()
 
     if dictRec[splitPacket[0].decode()] == "INIT_SYNACK":
         # send back an INIT_ACK
@@ -269,6 +279,10 @@ while True:
                     response,serverAddress = client_socket.recvfrom(2048)
                     splitResponse = response.split(b',')
 
+                    # Check if response was a disconnect message
+                    if dictRec[splitPacket[0].decode()] == "DCNT":
+                        disconnect()
+
                     data_type,other = splitData(splitResponse[3])
 
                     packet_lost = int(other)
@@ -288,6 +302,11 @@ while True:
                         client_socket.sendto(message.encode(), (args.server_name,server_port))
                         response,serverAddress = client_socket.recvfrom(2048)
                         splitResponse = response.split(b',')
+
+
+                        # Check if response was a disconnect message
+                        if dictRec[splitPacket[0].decode()] == "DCNT":
+                            disconnect()
 
                         data_type,other = splitData(splitResponse[3])
 
@@ -312,6 +331,10 @@ while True:
             # Wait for DATA_ACK from Server
             print("Receiving DATA_ACK")
             response,serverAddress = client_socket.recvfrom(2048)
+            
+            # Check if response was a disconnect message
+            if dictRec[splitPacket[0].decode()] == "DCNT":
+                disconnect()
 
             # Then send a FULL_DATA_SYN
             print("Sending FULL_DATA_SYN")
@@ -349,7 +372,6 @@ while True:
 
                 #Sending SYNC_SYN message
                 message = dictSend["SYNC_SYN"] + ",0001,0001,CAM!" + SS
-
                 client_socket.sendto(message.encode(), (args.server_name,server_port))
             elif data_type == "CAM":
                 # send SYNC_SYN for SENSOR
@@ -365,12 +387,12 @@ while True:
 
     elif dictRec[splitPacket[0].decode()] == "DCNT":
         print("Handling a DCNT from the server")
-        break
+        disconnect()
 
 # Rear Unit Shutting down
 # -----------------------------------------------------
-print("Rear Unit Shutting Down")
-GPIO.cleanup()
-client_socket.close()
-subprocess.call(['shutdown', '-h', 'now'], shell=False)
+#print("Rear Unit Shutting Down")
+#GPIO.cleanup()
+#client_socket.close()
+#subprocess.call(['shutdown', '-h', 'now'], shell=False)
 # -----------------------------------------------------
