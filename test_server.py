@@ -235,12 +235,15 @@ serverSocket = socket(AF_INET, SOCK_DGRAM)
 serverSocket.bind(('',serverPort))
 print("The server is ready to recieve")
 
+# ----------------------------------------
+# Remove Later
 def signal_handler(signal,frame):
     GPIO.cleanup()
     serverSocket.close()
     sys.exit(0)
 
 signal.signal(signal.SIGINT, signal_handler)
+# ------------------------------------------
 
 # Setting up gui for displaying image
 w = tkinter.Tk()
@@ -347,7 +350,7 @@ while True:
 
         if data_type == "CAM":
             led_flag = not led_flag        
-            #reset values 
+            # reset values 
             check_pt = 0
             packetsRec = [0] * MSS        
             full_string = b''
@@ -380,7 +383,7 @@ while True:
         data_type,other_data = splitData(splitPacket[3])
 
         if data_type == "CAM": 
-            #check for packet loss
+            # check for packet loss
 
             SegmentSize = int(other_data)
 
@@ -490,11 +493,3 @@ while True:
 
     w.update()
     w.update_idletasks()
-
-# Front Unit Shutting Down 
-# -----------------------------------------------------
-#print("Front Unit Shutting Down")
-#GPIO.cleanup()
-#serverSocket.close()
-#subprocess.call(['bash_scripts/./ad_connection.sh'], shell=False)
-# -----------------------------------------------------
