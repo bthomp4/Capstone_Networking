@@ -127,7 +127,7 @@ The goal of this project is to connect two Raspberry Pi Zero Ws together using a
       ```
       sudo cp /etc/dhcpcd.conf.adc /etc/dhcpcd.conf
       ```
-## Project Links
+## Project Links/ Helpful Tips
 ### For Access Point References
 https://www.raspberrypi.org/documentation/configuration/wireless/access-point.md
 
@@ -148,4 +148,14 @@ https://code.tutsplus.com/tutorials/base64-encoding-and-decoding-using-python--c
 
 https://stackoverflow.com/questions/10607468/how-to-reduce-the-image-file-size-using-pil
 
+## For Running bash script at startup:
+
+   1. Edit the rc.local file 
+      ```
+      sudo vim /etc/rc.local
+      ```
+   2. Add in the bash script that you wish to run
+      ```
+      sudo /home/pi/Capstone_Networking/bash_scripts/./startup.sh
+      ```
 
