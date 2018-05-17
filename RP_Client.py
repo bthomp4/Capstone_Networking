@@ -48,16 +48,16 @@ GPIO.setmode(GPIO.BCM)
 # Define GPIO to use on Pi
 GPIO_TRIGGER_LEFT  = 23
 GPIO_ECHO_LEFT     = 24
-GPIO_TRIGGER_RIGHT = 5
-GPIO_ECHO_RIGHT    = 6
+#GPIO_TRIGGER_RIGHT = 5
+#GPIO_ECHO_RIGHT    = 6
 GPIO_SAFE_SD       = 3
 GPIO_LBO           = 26
 
 # Set pins as output and input
 GPIO.setup(GPIO_TRIGGER_LEFT,GPIO.OUT)  # Trigger LEFT
 GPIO.setup(GPIO_ECHO_LEFT,GPIO.IN)      # Echo LEFT
-GPIO.setup(GPIO_TRIGGER_RIGHT,GPIO.OUT) # Trigger RIGHT
-GPIO.setup(GPIO_ECHO_RIGHT,GPIO.IN)     # ECHO RIGHT
+#GPIO.setup(GPIO_TRIGGER_RIGHT,GPIO.OUT) # Trigger RIGHT
+#GPIO.setup(GPIO_ECHO_RIGHT,GPIO.IN)     # ECHO RIGHT
 
 # For handling Safe Shutdown and LBO
 GPIO.setup(GPIO_SAFE_SD, GPIO.IN, pull_up_down = GPIO.PUD_UP)
@@ -83,9 +83,9 @@ def TakeMeasurement(Trigger, Echo):
     GPIO.output(Trigger, False)
     start = time()
 
-    while GPIO.output(Echo) == 0:
+    while GPIO.input(Echo) == 0:
         start = time()
-    while GPIO.output(Echo) == 1:
+    while GPIO.input(Echo) == 1:
         stop = time()
     stop = time()
 
