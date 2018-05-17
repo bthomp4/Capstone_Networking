@@ -48,16 +48,16 @@ GPIO.setmode(GPIO.BCM)
 # Define GPIO to use on Pi
 GPIO_TRIGGER_LEFT  = 23
 GPIO_ECHO_LEFT     = 24
-#GPIO_TRIGGER_RIGHT = 5
-#GPIO_ECHO_RIGHT    = 6
+GPIO_TRIGGER_RIGHT = 5
+GPIO_ECHO_RIGHT    = 6
 GPIO_SAFE_SD       = 3
 GPIO_LBO           = 26
 
 # Set pins as output and input
 GPIO.setup(GPIO_TRIGGER_LEFT,GPIO.OUT)  # Trigger LEFT
 GPIO.setup(GPIO_ECHO_LEFT,GPIO.IN)      # Echo LEFT
-#GPIO.setup(GPIO_TRIGGER_RIGHT,GPIO.OUT) # Trigger RIGHT
-#GPIO.setup(GPIO_ECHO_RIGHT,GPIO.IN)     # ECHO RIGHT
+GPIO.setup(GPIO_TRIGGER_RIGHT,GPIO.OUT) # Trigger RIGHT
+GPIO.setup(GPIO_ECHO_RIGHT,GPIO.IN)     # ECHO RIGHT
 
 # For handling Safe Shutdown and LBO
 GPIO.setup(GPIO_SAFE_SD, GPIO.IN, pull_up_down = GPIO.PUD_UP)
@@ -304,7 +304,10 @@ while True:
             client_socket.sendto(message.encode(),(args.server_name,server_port))
         elif data_type == "SEN":
             # Send DATA_SEN message
-            LS, RS = UpdateSideSensors()
+            #LS, RS = UpdateSideSensors()
+
+            LS = 'Y'
+            RS = 'N'
 
             message = dictSend["DATA_SEN"] + ",0001,0001," + LS + '!' + RS
             client_socket.sendto(message.encode(), (args.server_name,server_port))
