@@ -218,7 +218,7 @@ serverSocket.bind(('',server_port))
 
 # Setting up gui for displaying image
 w = tkinter.Tk()
-im = Image.open(picture)
+im = Image.open(logo)
 camImg = ImageTk.PhotoImage(im)
 label = tkinter.Label(w,image=camImg)
 label.pack()
