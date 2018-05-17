@@ -160,7 +160,7 @@ def disconnect():
     print("Rear Unit Shutting Down")
     GPIO.cleanup()
     client_socket.close()
-    subprocess.call(['shutdown', '-h', '.08'], shell=False)
+    subprocess.call(['shutdown', '-h', 'now'], shell=False)
     sys.exit(0)
 
 # ---------------

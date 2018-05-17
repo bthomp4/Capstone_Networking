@@ -204,6 +204,13 @@ def UpdateLidar():
             frontLEDs = 1
             break
 
+def disconnect():
+    print("Front Unit Shutting Down")
+    GPIO.cleanup()
+    serverSocket.close()
+    subprocess.call(['shutdown','-h','now'], shell=False)
+    sys.exit(0)
+
 # ---------------
 # Main Script
 # ---------------
