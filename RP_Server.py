@@ -26,8 +26,8 @@ frontLEDs = 0
 settleSleep = 0.5
 measurementSleep = 0.00001
 MSS = 9999 # Max Segment Size
-picture = "~/Capstone_Networking/test_decode.jpg"
-logo = "~/Capstone_Networking/logo.jpg"
+picture = "/home/pi/Capstone_Networking/test_decode.jpg"
+logo = "/home/pi/Capstone_Networking/logo.jpg"
 encode_string = []
 check_pt = 0    # where packets need to be checked for loss
 cp_value = 1    # SS/cp_value = num of packets sent per check
