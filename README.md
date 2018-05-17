@@ -160,11 +160,21 @@ https://stackoverflow.com/questions/10607468/how-to-reduce-the-image-file-size-u
       ```
 ## For Running Python Program at startup:
 
-    1. Edit the .bashrc file
-         ```
-         sudo vim /home/pi/.bashrc
-         ```
-    2. Add in the python program that you wish to run at the bottom of the file
+   1. Edit the .bashrc file
+        ```
+        sudo vim /home/pi/.bashrc
+        ```
+   2. Add in the python program that you wish to run at the bottom of the file
         ```
         sudo python3 /home/pi/Capstone_Networking/RP_Server.py
         ```
+## For opening terminal after startup:
+   
+   1. Edit the following file
+      ```
+      vim ~/.config/lxsession/LXDE-pi/autostart
+      ```
+   2. Add this to the end of the file
+     ```
+     @lxterminal
+     ```
