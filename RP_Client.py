@@ -304,10 +304,7 @@ while True:
             client_socket.sendto(message.encode(),(args.server_name,server_port))
         elif data_type == "SEN":
             # Send DATA_SEN message
-            #LS, RS = UpdateSideSensors()
-
-            LS = 'Y'
-            RS = 'N'
+            LS, RS = UpdateSideSensors()
 
             message = dictSend["DATA_SEN"] + ",0001,0001," + LS + '!' + RS
             client_socket.sendto(message.encode(), (args.server_name,server_port))
